@@ -10,8 +10,9 @@ class AuthController {
     };
 
     public register: RequestHandler = async (req: Request, res: Response) => {
-        const { email, username, password } = req.body;
+        const { email, username, password, full_name} = req.body;
         const serviceResponse = await authService.register(
+            full_name,
             email,
             username,
             password,

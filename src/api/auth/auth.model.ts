@@ -9,10 +9,10 @@ export type RefreshToken = z.infer<typeof TokenSchema>;
 export const TokenSchema = z.object({
     id: z.string(),
     user_id: z.string(),
-    token: z.string(),
-    created_at: z.date(),
-    expired_at: z.date(),
-    is_banned: z.boolean(),
+    hashed_token: z.string(),
+    expires_at: z.date(),
+    revoked: z.boolean(),
+    device_info: z.string(),
 });
 
 export type Auth = z.infer<typeof AuthSchema>;
@@ -37,6 +37,7 @@ export const LoginResponseSchema = z.object({
 
 export const RegisterSchema = z.object({
     body: z.object({
+        full_name: commonValidations.name,
         username: commonValidations.name,
         email: commonValidations.email,
         password: commonValidations.password,
