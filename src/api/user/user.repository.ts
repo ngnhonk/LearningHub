@@ -3,33 +3,40 @@ import db from "@/common/configs/database";
 
 export class UserRepository {
   async findAll(): Promise<User[]> {
-    return await db("user").select("*");
+    return await db("users").select("*");
   }
 
   async findById(id: string): Promise<User | null> {
-    return await db("user").where({ id }).first();
+    return await db("users").where({ id }).first();
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return await db("user").where({ email }).first();
+    return await db("users").where({ email }).first();
   }
 
   async findByUsername(username: string): Promise<User | null> {
-    return await db("user").where({ username }).first();
+    return await db("users").where({ username }).first();
   }
 
   async deleteById(id: string): Promise<number | null> {
-    return await db("user").where({ id }).del();
+    return await db("users").where({ id }).del();
   }
+
+  async addAvatar(user_id: string, avatar_url: string): Promise<User> {
+    return await db("users").where({ id: user_id }).update({ avatar_url });
+  }
+
   async createUser(
     id: string,
     email: string,
+    full_name: string,
     username: string,
     hashed_password: string,
   ): Promise<User> {
-    const newUser = await db("user").insert({
+    const newUser = await db("users").insert({
       id,
       email,
+      full_name,
       username,
       hashed_password,
     });
