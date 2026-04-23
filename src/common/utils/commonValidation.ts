@@ -6,7 +6,7 @@ export const commonValidations = {
 			required_error: "ID cannot be empty",
 			invalid_type_error: "ID must be a string",
 		})
-		.length(10, "ID must be exactly 10 characters"),
+		.length(36, "ID must be exactly 36 characters"),
 
 	text: z
 		.string({

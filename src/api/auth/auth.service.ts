@@ -11,7 +11,7 @@ import { Response } from "express";
 import { env } from "@/common/utils/envConfig";
 import { addHours } from "date-fns";
 
-const { JWT_REFRESH_TOKEN_TIME, JWT_ACCESS_TOKEN_TIME } = env;
+const { JWT_REFRESH_TOKEN_TIME } = env;
 
 export class AuthService {
   private authRepository: AuthRepository;
@@ -144,7 +144,7 @@ export class AuthService {
   ): Promise<ServiceResponse<string | null>> {
     try {
       // 1. verify JWT
-      let payload;
+      let payload: jwt.UserData;
       try {
         payload = jwt.verifyRefreshToken(refreshToken);
       } catch {
@@ -243,9 +243,8 @@ export class AuthService {
       });
       return ServiceResponse.success("Logged out!", null, StatusCodes.OK);
     } catch (error) {
-      const errorMessage = `Error when logging out: ${
-        (error as Error).message
-      }`;
+      const errorMessage = `Error when logging out: ${(error as Error).message
+        }`;
       logger.error(errorMessage);
       return ServiceResponse.failure(
         "An error occurred while logging out.",

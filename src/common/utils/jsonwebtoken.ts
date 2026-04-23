@@ -3,7 +3,6 @@ import { env } from "@/common/utils/envConfig";
 const {
     JWT_ACCESS_TOKEN_SECRET,
     JWT_REFRESH_TOKEN_SECRET,
-    JWT_TEMP_SECRET,
     JWT_ACCESS_TOKEN_TIME,
     JWT_REFRESH_TOKEN_TIME,
 } = env;
