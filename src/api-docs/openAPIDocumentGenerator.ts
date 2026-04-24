@@ -7,6 +7,7 @@ import { healthCheckRegistry } from "@/api/healthCheck/healthCheckRouter";
 import { userRegistry } from "@/api/user/user.route";
 import { authRegistry } from "@/api/auth/auth.route";
 import { subjectRegistry } from "@/api/subject/subject.route";
+import { questionRegistry } from "@/api/questions/question.route";
 export type OpenAPIDocument = ReturnType<
 	OpenApiGeneratorV3["generateDocument"]
 >;
@@ -17,6 +18,7 @@ export function generateOpenAPIDocument(): OpenAPIDocument {
 		userRegistry,
 		authRegistry,
 		subjectRegistry,
+		questionRegistry,
 	]);
 	registry.registerComponent("securitySchemes", "bearerAuth", {
 		type: "http",

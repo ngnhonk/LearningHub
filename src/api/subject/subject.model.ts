@@ -7,9 +7,9 @@ extendZodWithOpenApi(z);
 
 export type Subject = z.infer<typeof SubjectSchema>;
 export const SubjectSchema = z.object({
-	id: z.string(),
-	name: z.string(),
-	description: z.string(),
+	id: commonValidations.id,
+	name: commonValidations.name,
+	description: commonValidations.text.optional(),
 });
 
 // Input Validation for 'GET subjects/:id' endpoint
@@ -19,16 +19,16 @@ export const GetSubjectSchema = z.object({
 
 export const CreateSubjectSchema = z.object({
 	body: z.object({
-		name: z.string(),
-		description: z.string(),
+		name: commonValidations.name,
+		description: commonValidations.text.optional(),
 	}),
 });
 
 export const UpdateSubjectSchema = z.object({
 	params: z.object({ id: commonValidations.id }),
 	body: z.object({
-		name: z.string(),
-		description: z.string().optional(),
+		name: commonValidations.name,
+		description: commonValidations.text.optional(),
 	}),
 });
 

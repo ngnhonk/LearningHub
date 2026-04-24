@@ -45,7 +45,7 @@ export const commonValidations = {
 			invalid_type_error: "Name must be a string",
 		})
 		.min(2, "Name must be at least 2 characters")
-		.max(50, "Name must not exceed 50 characters"),
+		.max(36, "Name must not exceed 36 characters"),
 
 	phone: z
 		.string({
@@ -62,22 +62,22 @@ export const commonValidations = {
 		})
 		.min(8, "Password must be at least 8 characters"),
 
-	date_of_birth: z
+	date: z
 		.preprocess(
 			(arg) => {
 				if (typeof arg === "string" || arg instanceof Date)
 					return new Date(arg);
 				return arg;
 			},
-			z.date({ required_error: "Date of birth is required" }),
+			z.date({ required_error: "Date is required" }),
 		)
 		.refine((date) => date < new Date(), {
-			message: "Date of birth must be in the past",
+			message: "Date must be in the past",
 		}),
 
-	role: z.enum(["admin", "user"], {
+	role: z.enum(["admin", "student"], {
 		errorMap: () => ({
-			message: "Role must be either 'user' or 'admin'",
+			message: "Role must be either 'student' or 'admin'",
 		}),
 	}),
 
@@ -101,8 +101,8 @@ export const commonValidations = {
 		invalid_type_error: "Value must be a number",
 	}),
 
-	remember_me: z.boolean({
-		required_error: "Remember me is required",
-		invalid_type_error: "Remember me must be true or false",
+	true_false: z.boolean({
+		required_error: "This field is required",
+		invalid_type_error: "Must be true or false",
 	}),
 };
