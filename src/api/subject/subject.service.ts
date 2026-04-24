@@ -15,9 +15,9 @@ export class SubjectService {
   }
 
   // Retrieves all subjects from the database
-  async findAll(): Promise<ServiceResponse<Subject[] | null>> {
+  async getAll(): Promise<ServiceResponse<Subject[] | null>> {
     try {
-      const subjects = await this.subjectRepository.findAll();
+      const subjects = await this.subjectRepository.getAll();
       if (!subjects || subjects.length === 0) {
         return ServiceResponse.failure(
           "No Subjects found",
@@ -26,8 +26,8 @@ export class SubjectService {
         );
       }
       return ServiceResponse.success<Subject[]>("Subjects found", subjects);
-    } catch (ex) {
-      const errorMessage = `Error finding all subjects: $${(ex as Error).message}`;
+    } catch (error) {
+      const errorMessage = `Error finding all subjects: $${(error as Error).message}`;
       logger.error(errorMessage);
       return ServiceResponse.failure(
         "An error occurred while retrieving subjects.",
@@ -38,9 +38,9 @@ export class SubjectService {
   }
 
   // Retrieves a single subject by their ID
-  async findById(id: string): Promise<ServiceResponse<Subject | null>> {
+  async getById(id: string): Promise<ServiceResponse<Subject | null>> {
     try {
-      const subject = await this.subjectRepository.findById(id);
+      const subject = await this.subjectRepository.getById(id);
       if (!subject) {
         return ServiceResponse.failure(
           "Subject not found",
@@ -49,8 +49,8 @@ export class SubjectService {
         );
       }
       return ServiceResponse.success<Subject>("Subject found", subject);
-    } catch (ex) {
-      const errorMessage = `Error finding subject with id ${id}:, ${(ex as Error).message}`;
+    } catch (error) {
+      const errorMessage = `Error finding subject with id ${id}:, ${(error as Error).message}`;
       logger.error(errorMessage);
       return ServiceResponse.failure(
         "An error occurred while finding subject.",
@@ -71,8 +71,8 @@ export class SubjectService {
         );
       }
       return ServiceResponse.success<number>("Subject deleted", subject);
-    } catch (ex) {
-      const errorMessage = `Error finding subject with id ${id}:, ${(ex as Error).message}`;
+    } catch (error) {
+      const errorMessage = `Error finding subject with id ${id}:, ${(error as Error).message}`;
       logger.error(errorMessage);
       return ServiceResponse.failure(
         "An error occurred while deleting a subject.",
@@ -87,8 +87,8 @@ export class SubjectService {
       const id = uuidv7();
       const newSubject = await this.subjectRepository.createSubject(id, name, description);
       return ServiceResponse.success<Subject>("Subject created successfully", newSubject);
-    } catch (ex) {
-      const errorMessage = `Error creating subject: ${(ex as Error).message}`;
+    } catch (error) {
+      const errorMessage = `Error creating subject: ${(error as Error).message}`;
       logger.error(errorMessage);
       return ServiceResponse.failure(
         "An error occurred while creating a subject.",
@@ -100,7 +100,7 @@ export class SubjectService {
 
   async updateSubject(id: string, payload: Partial<Omit<Subject, "id">>): Promise<ServiceResponse<Subject | null>> {
     try {
-      const existingSubject = await this.subjectRepository.findById(id);
+      const existingSubject = await this.subjectRepository.getById(id);
       if (!existingSubject) {
         return ServiceResponse.failure(
           "Subject not found",
@@ -109,10 +109,10 @@ export class SubjectService {
         );
       }
       await this.subjectRepository.updateSubject(id, payload);
-      const updatedSubject = await this.subjectRepository.findById(id);
+      const updatedSubject = await this.subjectRepository.getById(id);
       return ServiceResponse.success<Subject>("Subject updated successfully", updatedSubject as Subject);
-    } catch (ex) {
-      const errorMessage = `Error updating subject with id ${id}: ${(ex as Error).message}`;
+    } catch (error) {
+      const errorMessage = `Error updating subject with id ${id}: ${(error as Error).message}`;
       logger.error(errorMessage);
       return ServiceResponse.failure(
         "An error occurred while updating a subject.",
