@@ -11,29 +11,35 @@ export const subjectRouter: Router = express.Router();
 
 subjectRegistry.register("Subject", SubjectSchema);
 
+// get all subjects
 subjectRegistry.registerPath({
 	method: "get",
 	path: "/subjects",
 	tags: ["Subject"],
+	summary: "Get all subjects",
 	responses: createApiResponse(z.array(SubjectSchema), "Success"),
 });
 
 subjectRouter.get("/", subjectController.getSubjects);
 
+// get subject by id
 subjectRegistry.registerPath({
 	method: "get",
 	path: "/subjects/{id}",
 	tags: ["Subject"],
+	summary: "Get a subject by id",
 	request: { params: GetSubjectSchema.shape.params },
 	responses: createApiResponse(SubjectSchema, "Success"),
 });
 
 subjectRouter.get("/:id", validateRequest(GetSubjectSchema), subjectController.getSubject);
 
+// create a subject
 subjectRegistry.registerPath({
 	method: "post",
 	path: "/subjects",
 	tags: ["Subject"],
+	summary: "Create a subject",
 	request: {
 		body: {
 			content: {
@@ -48,10 +54,12 @@ subjectRegistry.registerPath({
 
 subjectRouter.post("/", validateRequest(CreateSubjectSchema), subjectController.createSubject);
 
+// update a subject
 subjectRegistry.registerPath({
 	method: "put",
 	path: "/subjects/{id}",
 	tags: ["Subject"],
+	summary: "Update a subject",
 	request: { 
 		params: UpdateSubjectSchema.shape.params,
 		body: {
@@ -67,9 +75,11 @@ subjectRegistry.registerPath({
 
 subjectRouter.put("/:id", validateRequest(UpdateSubjectSchema), subjectController.updateSubject);
 
+// delete a subject by id
 subjectRegistry.registerPath({
 	method: "delete",
 	path: "/subjects/{id}",
+	summary: "Delete a subject",
 	tags: ["Subject"],
 	request: { params: DeleteSubjectSchema.shape.params },
 	responses: createApiResponse(z.number(), "Success"),

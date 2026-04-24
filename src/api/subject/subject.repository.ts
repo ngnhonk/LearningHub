@@ -2,11 +2,11 @@ import type { Subject } from "@/api/subject/subject.model";
 import db from "@/common/configs/database";
 
 export class SubjectRepository {
-  async findAll(): Promise<Subject[]> {
+  async getAll(): Promise<Subject[]> {
     return await db("subjects").select("*");
   }
 
-  async findById(id: string): Promise<Subject | null> {
+  async getById(id: string): Promise<Subject | null> {
     return await db("subjects").where({ id }).first();
   }
 

@@ -4,13 +4,13 @@ import { subjectService } from "@/api/subject/subject.service";
 
 class SubjectController {
 	public getSubjects: RequestHandler = async (_req: Request, res: Response) => {
-		const serviceResponse = await subjectService.findAll();
+		const serviceResponse = await subjectService.getAll();
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 
 	public getSubject: RequestHandler = async (req: Request, res: Response) => {
 		const id = req.params.id as string;
-		const serviceResponse = await subjectService.findById(id);
+		const serviceResponse = await subjectService.getById(id);
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 
