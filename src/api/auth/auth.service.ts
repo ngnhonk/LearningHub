@@ -34,8 +34,8 @@ export class AuthService {
   ): Promise<ServiceResponse<User | null>> {
     try {
       const user =
-        (await this.userRepository.findByEmail(email)) ||
-        (await this.userRepository.findByUsername(username));
+        (await this.userRepository.getByEmail(email)) ||
+        (await this.userRepository.getByUsername(username));
 
       if (user) {
         return ServiceResponse.failure(
@@ -55,8 +55,8 @@ export class AuthService {
       );
 
       return ServiceResponse.success<User>("Registration successful", newUser);
-    } catch (ex) {
-      const errorMessage = `Error registering user ${username}:, ${(ex as Error).message}`;
+    } catch (error) {
+      const errorMessage = `Error registering user ${username}:, ${(error as Error).message}`;
       logger.error(errorMessage);
       return ServiceResponse.failure(
         "An error occurred while registering.",
@@ -74,8 +74,8 @@ export class AuthService {
   ): Promise<ServiceResponse<object | string | null>> {
     try {
       const user =
-        (await this.userRepository.findByEmail(identify)) ||
-        (await this.userRepository.findByUsername(identify));
+        (await this.userRepository.getByEmail(identify)) ||
+        (await this.userRepository.getByUsername(identify));
 
       if (!user) {
         return ServiceResponse.failure(
@@ -127,8 +127,8 @@ export class AuthService {
         },
         StatusCodes.OK,
       );
-    } catch (ex) {
-      const errorMessage = `Error logging ${identify}:, ${(ex as Error).message}`;
+    } catch (error) {
+      const errorMessage = `Error logging ${identify}:, ${(error as Error).message}`;
       logger.error(errorMessage);
       return ServiceResponse.failure(
         "An error occurred while logging in.",
@@ -266,8 +266,8 @@ export class AuthService {
         );
       }
       return ServiceResponse.success<User[]>("Users found", users);
-    } catch (ex) {
-      const errorMessage = `Error finding all users: $${(ex as Error).message}`;
+    } catch (error) {
+      const errorMessage = `Error finding all users: $${(error as Error).message}`;
       logger.error(errorMessage);
       return ServiceResponse.failure(
         "An error occurred while retrieving users.",
