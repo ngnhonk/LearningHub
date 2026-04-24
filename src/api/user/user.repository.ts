@@ -2,19 +2,19 @@ import type { User } from "@/api/user/user.model";
 import db from "@/common/configs/database";
 
 export class UserRepository {
-  async findAll(): Promise<User[]> {
+  async getAll(): Promise<User[]> {
     return await db("users").select("*");
   }
 
-  async findById(id: string): Promise<User | null> {
+  async getById(id: string): Promise<User | null> {
     return await db("users").where({ id }).first();
   }
 
-  async findByEmail(email: string): Promise<User | null> {
+  async getByEmail(email: string): Promise<User | null> {
     return await db("users").where({ email }).first();
   }
 
-  async findByUsername(username: string): Promise<User | null> {
+  async getByUsername(username: string): Promise<User | null> {
     return await db("users").where({ username }).first();
   }
 
