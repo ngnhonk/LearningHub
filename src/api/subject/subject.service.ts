@@ -85,7 +85,6 @@ export class SubjectService {
   async createSubject(name: string, description: string): Promise<ServiceResponse<Subject | null>> {
     try {
       const id = uuidv7();
-      console.log(id);
       const newSubject = await this.subjectRepository.createSubject(id, name, description);
       return ServiceResponse.success<Subject>("Subject created successfully", newSubject);
     } catch (ex) {
