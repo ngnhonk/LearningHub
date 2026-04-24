@@ -13,7 +13,7 @@ export class UserService {
   // Retrieves all users from the database
   async findAll(): Promise<ServiceResponse<User[] | null>> {
     try {
-      const users = await this.userRepository.findAll();
+      const users = await this.userRepository.getAll();
       if (!users || users.length === 0) {
         return ServiceResponse.failure(
           "No Users found",
@@ -22,8 +22,8 @@ export class UserService {
         );
       }
       return ServiceResponse.success<User[]>("Users found", users);
-    } catch (ex) {
-      const errorMessage = `Error finding all users: $${(ex as Error).message}`;
+    } catch (error) {
+      const errorMessage = `Error finding all users: $${(error as Error).message}`;
       logger.error(errorMessage);
       return ServiceResponse.failure(
         "An error occurred while retrieving users.",
@@ -36,7 +36,7 @@ export class UserService {
   // Retrieves a single user by their ID
   async findById(id: string): Promise<ServiceResponse<User | null>> {
     try {
-      const user = await this.userRepository.findById(id);
+      const user = await this.userRepository.getById(id);
       if (!user) {
         return ServiceResponse.failure(
           "User not found",
@@ -45,8 +45,8 @@ export class UserService {
         );
       }
       return ServiceResponse.success<User>("User found", user);
-    } catch (ex) {
-      const errorMessage = `Error finding user with id ${id}:, ${(ex as Error).message}`;
+    } catch (error) {
+      const errorMessage = `Error finding user with id ${id}:, ${(error as Error).message}`;
       logger.error(errorMessage);
       return ServiceResponse.failure(
         "An error occurred while finding user.",
@@ -67,8 +67,8 @@ export class UserService {
         );
       }
       return ServiceResponse.success<number>("User deleted", user);
-    } catch (ex) {
-      const errorMessage = `Error finding user with id ${id}:, ${(ex as Error).message}`;
+    } catch (error) {
+      const errorMessage = `Error finding user with id ${id}:, ${(error as Error).message}`;
       logger.error(errorMessage);
       return ServiceResponse.failure(
         "An error occurred while deleting an user.",
