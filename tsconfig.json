@@ -1,23 +1,23 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
 
-    "moduleResolution": "bundler",
-    "rootDir": "./src",
-    "outDir": "dist",
+		"moduleResolution": "bundler",
+		"rootDir": "./src",
+		"outDir": "dist",
 
-    "paths": {
-      "@/*": ["./src/*"]
-    },
+		"paths": {
+			"@/*": ["./src/*"]
+		},
 
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
 
-    "types": ["vitest/globals"]
-  },
-  "include": ["src"],
-  "exclude": ["node_modules"]
+		"types": ["vitest/globals"]
+	},
+	"include": ["src"],
+	"exclude": ["node_modules"]
 }

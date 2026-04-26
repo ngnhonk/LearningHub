@@ -1,20 +1,17 @@
-export const buildOtpEmailHtml = (
-  otp_code: string,
-  otp_type: string,
-  name: string
-) => {
-  return `
+export const buildOtpEmailHtml = (otp_code: string, otp_type: string, name: string) => {
+	return `
     <div
         style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
         <h2 style="color: #4CAF50; text-align: center;">
-          ${otp_type === "register"
-      ? "Welcome to Honk's Learning Hub"
-      : otp_type === "reset_password"
-        ? "Reset Your Password"
-        : otp_type === "change_email"
-          ? "Change Your Email Address"
-          : "Notification"
-    }
+          ${
+						otp_type === "register"
+							? "Welcome to Honk's Learning Hub"
+							: otp_type === "reset_password"
+								? "Reset Your Password"
+								: otp_type === "change_email"
+									? "Change Your Email Address"
+									: "Notification"
+					}
         </h2>
         <p style="font-size: 16px;">Hello, <span style="color: #ff5757; font-weight: bold;">${name}</span>
         </p>
