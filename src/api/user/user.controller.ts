@@ -13,7 +13,6 @@ class UserController {
 		const serviceResponse = await userService.findById(id);
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
-
 }
 
 export const userController = new UserController();

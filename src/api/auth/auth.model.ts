@@ -7,87 +7,87 @@ extendZodWithOpenApi(z);
 
 export type RefreshToken = z.infer<typeof TokenSchema>;
 export const TokenSchema = z.object({
-  id: commonValidations.id,
-  user_id: commonValidations.id,
-  hashed_token: commonValidations.text,
-  expires_at: commonValidations.date,
-  revoked: commonValidations.true_false,
-  device_info: commonValidations.text,
+	id: commonValidations.id,
+	user_id: commonValidations.id,
+	hashed_token: commonValidations.text,
+	expires_at: commonValidations.date,
+	revoked: commonValidations.true_false,
+	device_info: commonValidations.text,
 });
 
 export type Auth = z.infer<typeof AuthSchema>;
 export const AuthSchema = z.object({
-  id: z.string(),
-  username: z.string().min(2).max(100),
-  email: z.string().email(),
-  create_time: z.date(),
+	id: z.string(),
+	username: z.string().min(2).max(100),
+	email: z.string().email(),
+	create_time: z.date(),
 });
 
 export const LoginSchema = z.object({
-  body: z.object({
-    identify: commonValidations.identify,
-    password: commonValidations.password,
-  }),
+	body: z.object({
+		identify: commonValidations.identify,
+		password: commonValidations.password,
+	}),
 });
 
 export const LoginResponseSchema = z.object({
-  message: commonValidations.text,
-  user: AuthSchema,
+	message: commonValidations.text,
+	user: AuthSchema,
 });
 
 export const RegisterSchema = z.object({
-  body: z.object({
-    full_name: commonValidations.name,
-    username: commonValidations.name,
-    email: commonValidations.email,
-    password: commonValidations.password,
-  }),
+	body: z.object({
+		full_name: commonValidations.name,
+		username: commonValidations.name,
+		email: commonValidations.email,
+		password: commonValidations.password,
+	}),
 });
 export const RegisterResponseSchema = z.object({
-  message: z.string(),
-  user: AuthSchema,
+	message: z.string(),
+	user: AuthSchema,
 });
 
 export const GetAccessTokenResponseSchema = z.object({
-  accessToken: z.string(),
+	accessToken: z.string(),
 });
 
 export const CompleteRegisterResponseSchema = z.object({
-  id: commonValidations.id,
+	id: commonValidations.id,
 });
 export const CompleteRegisterSchema = z.object({
-  body: z.object({
-    email: commonValidations.email,
-    otp: commonValidations.otp_code,
-    tempToken: z.string(),
-  }),
+	body: z.object({
+		email: commonValidations.email,
+		otp: commonValidations.otp_code,
+		tempToken: z.string(),
+	}),
 });
 
 export const GetAccessTokenSchema = z.object({
-  body: z.object({
-    refreshToken: z.string(),
-  }),
+	body: z.object({
+		refreshToken: z.string(),
+	}),
 });
 export const GetAccessTokenResponsechema = z.object({
-  accessToken: z.string(),
+	accessToken: z.string(),
 });
 
 export const InitResetPasswordSchema = z.object({
-  body: z.object({
-    email: commonValidations.email,
-  }),
+	body: z.object({
+		email: commonValidations.email,
+	}),
 });
 
 export const CompleteResetPasswordSchema = z.object({
-  body: z.object({
-    email: commonValidations.email,
-    otp: commonValidations.otp_code,
-    tempToken: commonValidations.text,
-    password: commonValidations.password,
-  }),
+	body: z.object({
+		email: commonValidations.email,
+		otp: commonValidations.otp_code,
+		tempToken: commonValidations.text,
+		password: commonValidations.password,
+	}),
 });
 
 export const InitRegisterResponseSchema = z.object({
-  email: commonValidations.email,
-  tempToken: commonValidations.text,
+	email: commonValidations.email,
+	tempToken: commonValidations.text,
 });

@@ -1,44 +1,38 @@
-import type { Request, Response, NextFunction } from "express";
+import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "../utils/envConfig";
 
 const { JWT_ACCESS_TOKEN_SECRET } = env;
 
 interface JwtPayload {
-    id: string;
-    username: string;
-    email: string;
+	id: string;
+	username: string;
+	email: string;
 }
 
 export interface AuthenticatedRequest extends Request {
-    user?: JwtPayload;
+	user?: JwtPayload;
 }
 
-export const authenticate = async (
-    req: AuthenticatedRequest,
-    res: Response,
-    next: NextFunction,
-): Promise<void> => {
-    try {
-        const authHeader = req.get("Authorization");
-        if (!authHeader?.startsWith("Bearer ")) {
-            res
-                .status(401)
-                .json({ message: "Unauthorized - Invalid or missing token" });
-            return;
-        }
+export const authenticate = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+	try {
+		const authHeader = req.get("Authorization");
+		if (!authHeader?.startsWith("Bearer ")) {
+			res.status(401).json({ message: "Unauthorized - Invalid or missing token" });
+			return;
+		}
 
-        const token = authHeader.replace("Bearer ", "");
-        const decoded = jwt.verify(token, JWT_ACCESS_TOKEN_SECRET) as JwtPayload;
+		const token = authHeader.replace("Bearer ", "");
+		const decoded = jwt.verify(token, JWT_ACCESS_TOKEN_SECRET) as JwtPayload;
 
-        req.user = decoded;
-        next();
-    } catch (error) {
-        res.status(401).json({
-            message: "Authentication failed",
-            error: error instanceof Error ? error.message : "Unknown error",
-        });
-    }
+		req.user = decoded;
+		next();
+	} catch (error) {
+		res.status(401).json({
+			message: "Authentication failed",
+			error: error instanceof Error ? error.message : "Unknown error",
+		});
+	}
 };
 
 // export const authorize = (roles: string[]) => {
