@@ -1,7 +1,13 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Router } from "express";
 import { z } from "zod";
-import { GetSubjectSchema, SubjectSchema, CreateSubjectSchema, UpdateSubjectSchema, DeleteSubjectSchema } from "@/api/subject/subject.model";
+import {
+	CreateSubjectSchema,
+	DeleteSubjectSchema,
+	GetSubjectSchema,
+	SubjectSchema,
+	UpdateSubjectSchema,
+} from "@/api/subject/subject.model";
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { subjectController } from "./subject.controller";
@@ -60,7 +66,7 @@ subjectRegistry.registerPath({
 	path: "/subjects/{id}",
 	tags: ["Subject"],
 	summary: "Update a subject",
-	request: { 
+	request: {
 		params: UpdateSubjectSchema.shape.params,
 		body: {
 			content: {

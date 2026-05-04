@@ -65,8 +65,7 @@ export const commonValidations = {
 	date: z
 		.preprocess(
 			(arg) => {
-				if (typeof arg === "string" || arg instanceof Date)
-					return new Date(arg);
+				if (typeof arg === "string" || arg instanceof Date) return new Date(arg);
 				return arg;
 			},
 			z.date({ required_error: "Date is required" }),

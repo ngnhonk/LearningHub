@@ -1,18 +1,19 @@
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { type Express } from "express";
 import helmet from "helmet";
 import { pino } from "pino";
 import { healthCheckRouter } from "@/api/healthCheck/healthCheckRouter";
-import { userRouter } from "@/api/user/user.route";
 import { subjectRouter } from "@/api/subject/subject.route";
+import { userRouter } from "@/api/user/user.route";
 import { openAPIRouter } from "@/api-docs/openAPIRouter";
 import errorHandler from "@/common/middleware/errorHandler";
 import rateLimiter from "@/common/middleware/rateLimiter";
 import requestLogger from "@/common/middleware/requestLogger";
 import { env } from "@/common/utils/envConfig";
 import { authRouter } from "./api/auth/auth.route";
-import cookieParser from "cookie-parser";
 import { questionRouter } from "./api/questions/question.route";
+import { answerRouter } from "./api/answers/answer.route";
 
 const logger = pino({ name: "server start" });
 const app: Express = express();
@@ -39,6 +40,7 @@ app.use("/users", userRouter);
 app.use("/subjects", subjectRouter);
 app.use("/auth", authRouter);
 app.use("/questions", questionRouter);
+app.use("/answers", answerRouter);
 
 // Swagger UI
 app.use(openAPIRouter);

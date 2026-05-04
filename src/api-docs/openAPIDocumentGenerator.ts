@@ -1,16 +1,11 @@
-import {
-	OpenAPIRegistry,
-	OpenApiGeneratorV3,
-} from "@asteasolutions/zod-to-openapi";
-
-import { healthCheckRegistry } from "@/api/healthCheck/healthCheckRouter";
-import { userRegistry } from "@/api/user/user.route";
+import { OpenAPIRegistry, OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import { authRegistry } from "@/api/auth/auth.route";
-import { subjectRegistry } from "@/api/subject/subject.route";
+import { healthCheckRegistry } from "@/api/healthCheck/healthCheckRouter";
 import { questionRegistry } from "@/api/questions/question.route";
-export type OpenAPIDocument = ReturnType<
-	OpenApiGeneratorV3["generateDocument"]
->;
+import { subjectRegistry } from "@/api/subject/subject.route";
+import { userRegistry } from "@/api/user/user.route";
+import { answerRegistry } from "@/api/answers/answer.route";
+export type OpenAPIDocument = ReturnType<OpenApiGeneratorV3["generateDocument"]>;
 
 export function generateOpenAPIDocument(): OpenAPIDocument {
 	const registry = new OpenAPIRegistry([
@@ -19,6 +14,7 @@ export function generateOpenAPIDocument(): OpenAPIDocument {
 		authRegistry,
 		subjectRegistry,
 		questionRegistry,
+		answerRegistry,
 	]);
 	registry.registerComponent("securitySchemes", "bearerAuth", {
 		type: "http",

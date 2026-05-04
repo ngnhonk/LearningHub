@@ -14,7 +14,7 @@ export const UserSchema = z.object({
 	hashed_password: z.string(),
 	role: z.enum(["student", "admin"]),
 	avatar_url: z.string(),
-	create_at: z.date()
+	create_at: z.date(),
 });
 
 // Input Validation for 'GET users/:id' endpoint
