@@ -6,6 +6,7 @@ import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { userController } from "./user.controller";
 
+
 export const userRegistry = new OpenAPIRegistry();
 export const userRouter: Router = express.Router();
 

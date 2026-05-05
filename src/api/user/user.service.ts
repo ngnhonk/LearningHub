@@ -11,7 +11,7 @@ export class UserService {
 	}
 
 	// Retrieves all users from the database
-	async findAll(): Promise<ServiceResponse<User[] | null>> {
+	async getAll(): Promise<ServiceResponse<User[] | null>> {
 		try {
 			const users = await this.userRepository.getAll();
 			if (!users || users.length === 0) {
@@ -30,7 +30,7 @@ export class UserService {
 	}
 
 	// Retrieves a single user by their ID
-	async findById(id: string): Promise<ServiceResponse<User | null>> {
+	async getById(id: string): Promise<ServiceResponse<User | null>> {
 		try {
 			const user = await this.userRepository.getById(id);
 			if (!user) {
