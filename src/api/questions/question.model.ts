@@ -21,7 +21,6 @@ export const GetQuestionSchema = z.object({
 export const CreateQuestionSchema = z.object({
 	body: z.object({
 		content: commonValidations.text,
-		created_by: commonValidations.id,
 	}),
 });
 
