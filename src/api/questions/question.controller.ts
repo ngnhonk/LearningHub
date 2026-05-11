@@ -1,6 +1,7 @@
 import type { Request, RequestHandler, Response } from "express";
 import { questionService } from "./question.service";
 
+import { AuthenticatedRequest } from "@/common/middleware/authenticate";
 class QuestionController {
 	public getQuestions: RequestHandler = async (_req: Request, res: Response) => {
 		const serviceResponse = await questionService.getAll();
@@ -13,8 +14,9 @@ class QuestionController {
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 
-	public createQuestion: RequestHandler = async (req: Request, res: Response) => {
-		const { content, created_by } = req.body; // later: lấy id của người tạo từ cookie, api này bắt buộc phải đăng nhập
+	public createQuestion: RequestHandler = async (req: AuthenticatedRequest, res: Response) => {
+		const { content } = req.body;
+		const created_by = (req as any).user.id;
 		const serviceResponse = await questionService.createQuestion(content, created_by);
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
