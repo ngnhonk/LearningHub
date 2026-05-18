@@ -28,8 +28,6 @@ export class AuthRepository {
 	async getHashedToken(hashed_token: string): Promise<RefreshToken | null> {
 		const result = await db("refresh_tokens")
 			.where({ hashed_token })
-			.andWhere("expires_at", ">", db.fn.now())
-			.andWhere({ revoked: false })
 			.first();
 		return result;
 	}

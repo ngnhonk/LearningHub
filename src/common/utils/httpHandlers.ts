@@ -10,15 +10,16 @@ export const validateRequest = (schema: ZodSchema) => async (req: Request, res: 
 		next();
 	} catch (err) {
 		const errors = (err as ZodError).errors.map((e) => {
-			const fieldPath = e.path.length > 0 ? e.path.join(".") : "root";
-			return `${fieldPath}: ${e.message}`;
+			// const fieldPath = e.path.length > 0 ? e.path.join(".") : "root";
+			// return `${fieldPath}: ${e.message}`;
+			return `${e.message}`;
 		});
-
 		const errorMessage =
 			errors.length === 1
 				? `Invalid input: ${errors[0]}`
 				: `Invalid input (${errors.length} errors): ${errors.join("; ")}`;
 
+			console.log("==============[ ", errorMessage, " ]==============");
 		const statusCode = StatusCodes.BAD_REQUEST;
 		const serviceResponse = ServiceResponse.failure(errorMessage, null, statusCode);
 		res.status(serviceResponse.statusCode).send(serviceResponse);
