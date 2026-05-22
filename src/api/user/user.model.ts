@@ -17,6 +17,17 @@ export const UserSchema = z.object({
 	create_at: z.date(),
 });
 
+
+
+export const ChangePasswordSchema = z.object({
+	body: z.object({
+		oldPassword: commonValidations.password,
+		newPassword: commonValidations.password,
+	}),
+});
+export const ChangePasswordResponseSchema = z.object({
+	id: commonValidations.id,
+});
 // Input Validation for 'GET users/:id' endpoint
 export const GetUserSchema = z.object({
 	params: z.object({ id: commonValidations.id }),
