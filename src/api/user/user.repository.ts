@@ -7,7 +7,8 @@ export const users: User[] = [
     email: "admin@example.com",
     full_name: "System Admin",
     username: "admin",
-    hashed_password: "$2b$10$pyw..4uNEotKH0eO7n30X..ytJPBgg6XlPPgwuEAkHilry6wcZiMq",
+    hashed_password:
+      "$2b$10$pyw..4uNEotKH0eO7n30X..ytJPBgg6XlPPgwuEAkHilry6wcZiMq",
     role: "admin",
     avatar_url: "",
     create_at: new Date("2026-04-22"),
@@ -54,5 +55,9 @@ export class UserRepository {
       hashed_password,
     });
     return newUser;
+  }
+
+  async changePassword(id: string, newHashedPassword: string): Promise<number> {
+    return await db("users").update({ hashed_password: newHashedPassword }).where({ id });
   }
 }
