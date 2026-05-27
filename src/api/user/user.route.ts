@@ -11,6 +11,7 @@ import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { userController } from "./user.controller";
 import { authenticate, authorize } from "@/common/middleware/authenticate";
+import { uploadAvatar } from "@/common/middleware/upload";
 
 export const userRegistry = new OpenAPIRegistry();
 export const userRouter: Router = express.Router();
@@ -62,3 +63,23 @@ userRouter.put(
   authenticate,
   userController.changePassword,
 );
+
+userRegistry.registerPath({
+	method: "put",
+	path: "/users/change-avatar",
+	tags: ["User"],
+	request: {
+		body: {
+			content: {
+				"multipart/form-data": {
+					schema: z.object({
+						avatar: z.string().openapi({ type: "string", format: "binary" }),
+					}),
+				},
+			},
+		},
+	},
+	responses: createApiResponse(UserSchema, "Success"),
+});
+
+userRouter.put("/change-avatar", authenticate, uploadAvatar.single("avatar"), userController.changeAvatar);

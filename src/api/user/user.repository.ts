@@ -36,8 +36,8 @@ export class UserRepository {
     return await db("users").where({ id }).del();
   }
 
-  async addAvatar(user_id: string, avatar_url: string): Promise<User> {
-    return await db("users").where({ id: user_id }).update({ avatar_url });
+  async addAvatar(id: string, avatar_url: string): Promise<User> {
+    return await db("users").where({ id }).update({ avatar_url });
   }
 
   async createUser(

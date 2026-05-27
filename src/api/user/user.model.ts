@@ -34,3 +34,4 @@ export const GetUserSchema = z.object({
 });
 
 export const GetUserResponseSchema = UserSchema;
+
