@@ -135,6 +135,43 @@ export class UserService {
 
     return ServiceResponse.success<null>("Password changed successfully", null);
   }
+
+  async changeAvatar(
+		userId: string,
+		file: Express.Multer.File,
+	): Promise<ServiceResponse<User | null>> {
+		try {
+			if (!file) {
+				return ServiceResponse.failure(
+					"No avatar image file uploaded or invalid file format",
+					null,
+					StatusCodes.BAD_REQUEST,
+				);
+			}
+
+			const user = await this.userRepository.getById(userId);
+			if (!user) {
+				return ServiceResponse.failure(
+					"User not found",
+					null,
+					StatusCodes.NOT_FOUND,
+				);
+			}
+
+			const avatarUrl = `/uploads/avatars/${file.filename}`;
+			const updatedUser = await this.userRepository.addAvatar(userId, avatarUrl);
+
+			return ServiceResponse.success<User>("Avatar updated successfully", updatedUser);
+		} catch (error) {
+			const errorMessage = `Error changing avatar for user ${userId || "unknown"}: ${(error as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure(
+				"An error occurred while changing avatar.",
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
 }
 
 export const userService = new UserService();

@@ -27,6 +27,16 @@ class UserController {
     );
     res.status(serviceResponse.statusCode).send(serviceResponse);
   };
+
+  public changeAvatar: RequestHandler = async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ) => {
+    const userId = (req as any).user.id;
+    const file = (req as any).file;
+    const serviceResponse = await userService.changeAvatar(userId, file);
+    res.status(serviceResponse.statusCode).send(serviceResponse);
+  };
 }
 
 export const userController = new UserController();
