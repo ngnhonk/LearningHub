@@ -1,12 +1,18 @@
 import jwt from "jsonwebtoken";
 import { env } from "@/common/utils/envConfig";
 
-const { JWT_ACCESS_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET, JWT_ACCESS_TOKEN_TIME, JWT_REFRESH_TOKEN_TIME } = env;
+const {
+	JWT_ACCESS_TOKEN_SECRET,
+	JWT_REFRESH_TOKEN_SECRET,
+	JWT_ACCESS_TOKEN_TIME,
+	JWT_REFRESH_TOKEN_TIME,
+} = env;
 
 export interface UserData {
 	id: string;
 	email: string;
 	username: string;
+	role: string;
 }
 
 // Access Token
@@ -21,11 +27,13 @@ export const verifyAccessToken = (accessToken: string): UserData => {
 		id: string;
 		email: string;
 		username: string;
+		role: string;
 	};
 	const result: UserData = {
 		id: decoded.id,
 		email: decoded.email,
 		username: decoded.username,
+		role: decoded.role,
 	};
 
 	return result;
@@ -43,11 +51,13 @@ export const verifyRefreshToken = (refreshToken: string): UserData => {
 		id: string;
 		email: string;
 		username: string;
+		role: string;
 	};
 	const result: UserData = {
 		id: decoded.id,
 		email: decoded.email,
 		username: decoded.username,
+		role: decoded.role,
 	};
 
 	return result;
