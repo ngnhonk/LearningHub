@@ -15,6 +15,7 @@ import {
   GetExamDetailSchema,
 } from "./exam.model";
 import { authenticate, authorize } from "@/common/middleware/authenticate";
+import { uploadExcel } from "@/common/middleware/upload";
 
 export const examRegistry = new OpenAPIRegistry();
 export const examRouter: Router = express.Router();
@@ -145,4 +146,42 @@ examRouter.get(
   "/:id/detail",
   validateRequest(GetExamDetailSchema),
   examController.getExamDetail,
+);
+
+// import exam from excel
+examRegistry.registerPath({
+  method: "post",
+  path: "/exams/import",
+  tags: ["Exam"],
+  summary: "Import exam and questions from Excel",
+  request: {
+    body: {
+      content: {
+        "multipart/form-data": {
+          schema: {
+            type: "object",
+            properties: {
+              subject_id: {
+                type: "string",
+                description: "ID of the subject",
+              },
+              file: {
+                type: "string",
+                format: "binary",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  responses: createApiResponse(ExamSchema, "Success"),
+});
+
+examRouter.post(
+  "/import",
+  authenticate,
+  authorize(["admin"]),
+  uploadExcel.single("file"),
+  examController.importFromExcel,
 );

@@ -1,4 +1,6 @@
 import { StatusCodes } from "http-status-codes";
+import * as xlsx from "xlsx";
+import db from "@/common/configs/database";
 import { v7 as uuidv7 } from "uuid";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { logger } from "@/server";
@@ -192,6 +194,105 @@ export class ExamService {
 			logger.error(errorMessage);
 			return ServiceResponse.failure(
 				"An error occurred while retrieving exam detail.",
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	async importFromExcel(fileBuffer: Buffer, created_by: string, subject_id?: string): Promise<ServiceResponse<any | null>> {
+		try {
+			const workbook = xlsx.read(fileBuffer, { type: "buffer" });
+
+			const examSheet = workbook.Sheets["Exam"];
+			const questionSheet = workbook.Sheets["Questions"];
+
+			if (!examSheet || !questionSheet) {
+				return ServiceResponse.failure("File Excel must have 'Exam' and 'Questions' sheets", null, StatusCodes.BAD_REQUEST);
+			}
+
+			const examData: any[] = xlsx.utils.sheet_to_json(examSheet);
+			if (examData.length === 0) {
+				return ServiceResponse.failure("No exam data found in 'Exam' sheet", null, StatusCodes.BAD_REQUEST);
+			}
+
+			const examInfo = examData[0];
+			const questionsData: any[] = xlsx.utils.sheet_to_json(questionSheet);
+
+			if (questionsData.length === 0) {
+				return ServiceResponse.failure("No questions found in 'Questions' sheet", null, StatusCodes.BAD_REQUEST);
+			}
+
+			const finalSubjectId = subject_id || examInfo.SubjectId;
+			if (!finalSubjectId) {
+				return ServiceResponse.failure("subject_id is required either in Excel or in form data", null, StatusCodes.BAD_REQUEST);
+			}
+
+			// Validate and process inside a transaction
+			return await db.transaction(async (trx: any) => {
+				const examId = uuidv7();
+
+				// 1. Create Exam
+				await trx("exams").insert({
+					id: examId,
+					title: examInfo.Title || "Untitled Exam",
+					description: examInfo.Description || "",
+					subject_id: finalSubjectId,
+					duration_minutes: examInfo.Duration || 60,
+					total_marks: examInfo.TotalMarks || 100,
+					pass_percentage: examInfo.PassPercentage || 50,
+					is_published: examInfo.IsPublished || false,
+					created_by,
+				});
+
+				// 2. Create Questions and Answers
+				for (const qRow of questionsData) {
+					const questionId = uuidv7();
+
+					// Create Question
+					await trx("questions").insert({
+						id: questionId,
+						content: qRow.Content,
+						created_by,
+					});
+
+					// Create Answers (4 options)
+					const correctAnswerIndex = parseInt(qRow.Correct, 10);
+
+					const answers = [
+						{ content: qRow.Option1, is_correct: correctAnswerIndex === 1 },
+						{ content: qRow.Option2, is_correct: correctAnswerIndex === 2 },
+						{ content: qRow.Option3, is_correct: correctAnswerIndex === 3 },
+						{ content: qRow.Option4, is_correct: correctAnswerIndex === 4 },
+					];
+
+					for (const answer of answers) {
+						if (answer.content) { // Only create if option has content
+							await trx("answers").insert({
+								id: uuidv7(),
+								question_id: questionId,
+								content: String(answer.content),
+								is_correct: answer.is_correct,
+							});
+						}
+					}
+
+					// 3. Link Question to Exam
+					await trx("exam_questions").insert({
+						id: uuidv7(),
+						exam_id: examId,
+						question_id: questionId,
+					});
+				}
+
+				return ServiceResponse.success("Exam and questions imported successfully", { examId });
+			});
+
+		} catch (error) {
+			const errorMessage = `Error importing exam from Excel: ${(error as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure(
+				"An error occurred while importing exam.",
 				null,
 				StatusCodes.INTERNAL_SERVER_ERROR,
 			);
