@@ -5,6 +5,7 @@ import { questionRegistry } from "@/api/questions/question.route";
 import { subjectRegistry } from "@/api/subject/subject.route";
 import { userRegistry } from "@/api/user/user.route";
 import { answerRegistry } from "@/api/answers/answer.route";
+import { examQuestionRegistry } from "@/api/exam_questions/exam_question.route";
 export type OpenAPIDocument = ReturnType<OpenApiGeneratorV3["generateDocument"]>;
 
 export function generateOpenAPIDocument(): OpenAPIDocument {
@@ -15,6 +16,7 @@ export function generateOpenAPIDocument(): OpenAPIDocument {
 		subjectRegistry,
 		questionRegistry,
 		answerRegistry,
+		examQuestionRegistry,
 	]);
 	registry.registerComponent("securitySchemes", "bearerAuth", {
 		type: "http",

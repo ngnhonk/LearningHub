@@ -14,6 +14,7 @@ import { env } from "@/common/utils/envConfig";
 import { authRouter } from "./api/auth/auth.route";
 import { questionRouter } from "./api/questions/question.route";
 import { answerRouter } from "./api/answers/answer.route";
+import { examQuestionRouter } from "./api/exam_questions/exam_question.route";
 
 const logger = pino({ name: "server start" });
 const app: Express = express();
@@ -41,6 +42,7 @@ app.use("/subjects", subjectRouter);
 app.use("/auth", authRouter);
 app.use("/questions", questionRouter);
 app.use("/answers", answerRouter);
+app.use("/exam-questions", examQuestionRouter);
 
 // Swagger UI
 app.use(openAPIRouter);
