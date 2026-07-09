@@ -103,6 +103,24 @@ export class ExamQuestionService {
 			);
 		}
 	}
+
+	async getQuestionsByExamId(exam_id: string): Promise<ServiceResponse<ExamQuestion[] | null>> {
+		try {
+			const result = await this.examQuestionRepository.getQuestionsByExamId(exam_id);
+			if (!result || result.length === 0) {
+				return ServiceResponse.failure("No Exam Questions found", null, StatusCodes.NOT_FOUND);
+			}
+			return ServiceResponse.success<ExamQuestion[] | null>("Exam Questions found", result);
+		} catch (error) {
+			const errorMessage = `Error finding exam questions: ${(error as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure(
+				"An error occurred while retrieving exam questions.",
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
 }
 
 export const examQuestionService = new ExamQuestionService();

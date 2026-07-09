@@ -11,6 +11,7 @@ import {
   GetExamQuestionSchema,
   ExamQuestionSchema,
   UpdateExamQuestionSchema,
+  GetQuestionsByExamIdSchema,
 } from "./exam_question.model";
 
 export const examQuestionRegistry = new OpenAPIRegistry();
@@ -108,4 +109,20 @@ examQuestionRouter.delete(
   "/:id",
   validateRequest(DeleteExamQuestionSchema),
   examQuestionController.deleteExamQuestion,
+);
+
+// get questions by exam_id
+examQuestionRegistry.registerPath({
+  method: "get",
+  path: "/exam-questions/exam/{exam_id}",
+  summary: "Get all questions by exam_id",
+  tags: ["ExamQuestion"],
+  request: { params: GetQuestionsByExamIdSchema.shape.params },
+  responses: createApiResponse(ExamQuestionSchema, "Success"),
+});
+
+examQuestionRouter.get(
+  "/exam/:exam_id",
+  validateRequest(GetQuestionsByExamIdSchema),
+  examQuestionController.getQuestionsByExamId,
 );

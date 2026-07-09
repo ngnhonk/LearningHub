@@ -36,4 +36,12 @@ export const DeleteExamQuestionSchema = z.object({
 	params: z.object({ id: commonValidations.id }),
 });
 
+export const GetQuestionsByExamIdSchema = z.object({
+	params: z.object({ exam_id: commonValidations.id }),
+});
+
 export const GetExamQuestionResponseSchema = GetExamQuestionSchema;
+
+export const GetExamQuestionsByExamIdResponseSchema = z.object({
+	params: z.object({ exam_id: commonValidations.id }),
+});

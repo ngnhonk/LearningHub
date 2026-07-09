@@ -22,4 +22,8 @@ export class ExamQuestionRepository {
 	async updateExamQuestion(id: string, payload: Partial<Omit<ExamQuestion, "id">>): Promise<number | null> {
 		return await db("exam_questions").where({ id }).update(payload);
 	}
+
+	async getQuestionsByExamId(exam_id: string): Promise<ExamQuestion[]> {
+		return await db("exam_questions").where({ exam_id });
+	}
 }
