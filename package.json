@@ -37,6 +37,7 @@
 		"pino-http": "10.5.0",
 		"swagger-ui-express": "5.0.1",
 		"uuid": "^13.0.0",
+		"xlsx": "^0.18.5",
 		"zod": "3.25.76"
 	},
 	"devDependencies": {

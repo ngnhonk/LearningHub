@@ -1,6 +1,9 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import express, { type Router } from "express";
 import { z } from "zod";
+import multer from "multer";
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
 import { validateRequest } from "@/common/utils/httpHandlers";
@@ -145,4 +148,44 @@ examRouter.get(
   "/:id/detail",
   validateRequest(GetExamDetailSchema),
   examController.getExamDetail,
+);
+
+// import exam from excel
+examRegistry.registerPath({
+  method: "post",
+  path: "/exams/import",
+  summary: "Import exam and questions from Excel file",
+  tags: ["Exam"],
+  request: {
+    body: {
+      content: {
+        "multipart/form-data": {
+          schema: {
+            type: "object",
+            properties: {
+              subject_id: { type: "string" },
+              file: { type: "string", format: "binary" },
+            },
+            required: ["subject_id", "file"],
+          },
+        },
+      },
+    },
+  },
+  responses: createApiResponse(
+    z.object({
+      exam_id: z.string(),
+      title: z.string(),
+      question_count: z.number(),
+    }),
+    "Success",
+  ),
+});
+
+examRouter.post(
+  "/import",
+  authenticate,
+  authorize(["admin"]),
+  upload.single("file"),
+  examController.importExam,
 );

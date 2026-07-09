@@ -55,6 +55,33 @@ class ExamController {
 		const serviceResponse = await examService.getExamDetail(id);
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
+
+	public importExam: RequestHandler = async (req: AuthenticatedRequest, res: Response) => {
+		const subjectId = req.body.subject_id as string;
+		const createdBy = (req as any).user.id;
+		const file = req.file;
+
+		if (!subjectId) {
+			res.status(400).send({
+				success: false,
+				message: "subject_id is required",
+				statusCode: 400,
+			});
+			return;
+		}
+
+		if (!file) {
+			res.status(400).send({
+				success: false,
+				message: "Excel file is required",
+				statusCode: 400,
+			});
+			return;
+		}
+
+		const serviceResponse = await examService.importExam(subjectId, createdBy, file.buffer);
+		res.status(serviceResponse.statusCode).send(serviceResponse);
+	};
 }
 
 export const examController = new ExamController();
