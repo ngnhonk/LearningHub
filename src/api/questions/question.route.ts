@@ -11,6 +11,7 @@ import {
   GetQuestionSchema,
   QuestionSchema,
   UpdateQuestionSchema,
+  GetByCreatedBySchema,
 } from "./question.model";
 import { authenticate, authorize } from "@/common/middleware/authenticate";
 
@@ -29,6 +30,22 @@ questionRegistry.registerPath({
 });
 
 questionRouter.get("/", questionController.getQuestions);
+
+// get questions by created_by
+questionRegistry.registerPath({
+  method: "get",
+  path: "/questions/created-by/{userId}",
+  summary: "Get all questions created by a specific user",
+  tags: ["Question"],
+  request: { params: GetByCreatedBySchema.shape.params },
+  responses: createApiResponse(z.array(QuestionSchema), "Success"),
+});
+
+questionRouter.get(
+  "/created-by/:userId",
+  validateRequest(GetByCreatedBySchema),
+  questionController.getByCreatedBy,
+);
 
 // get one by id
 questionRegistry.registerPath({

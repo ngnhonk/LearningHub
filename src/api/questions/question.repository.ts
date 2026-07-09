@@ -10,6 +10,10 @@ export class QuestionRepository {
 		return await db("questions").where({ id }).first();
 	}
 
+	async getByCreatedBy(userId: string): Promise<Question[]> {
+		return await db("questions").where({ created_by: userId }).select("*");
+	}
+
 	async deleteById(id: string): Promise<number | null> {
 		return await db("questions").where({ id }).del();
 	}

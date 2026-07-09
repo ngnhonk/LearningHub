@@ -4,12 +4,26 @@ import { ServiceResponse } from "@/common/models/serviceResponse";
 import { logger } from "@/server";
 import type { Exam } from "./exam.model";
 import { ExamRepository } from "./exam.repository";
+import { ExamQuestionRepository } from "@/api/exam_questions/exam_question.repository";
+import { QuestionRepository } from "@/api/questions/question.repository";
+import { AnswerRepository } from "@/api/answers/answer.repository";
 
 export class ExamService {
 	private examRepository: ExamRepository;
+	private examQuestionRepository: ExamQuestionRepository;
+	private questionRepository: QuestionRepository;
+	private answerRepository: AnswerRepository;
 
-	constructor(repository: ExamRepository = new ExamRepository()) {
+	constructor(
+		repository: ExamRepository = new ExamRepository(),
+		examQuestionRepository: ExamQuestionRepository = new ExamQuestionRepository(),
+		questionRepository: QuestionRepository = new QuestionRepository(),
+		answerRepository: AnswerRepository = new AnswerRepository(),
+	) {
 		this.examRepository = repository;
+		this.examQuestionRepository = examQuestionRepository;
+		this.questionRepository = questionRepository;
+		this.answerRepository = answerRepository;
 	}
 
 	// Retrieves all exams from the database
@@ -44,6 +58,25 @@ export class ExamService {
 			logger.error(errorMessage);
 			return ServiceResponse.failure(
 				"An error occurred while finding exam.",
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	// Retrieves all exams by subject ID
+	async getBySubjectId(subjectId: string): Promise<ServiceResponse<Exam[] | null>> {
+		try {
+			const result = await this.examRepository.getBySubjectId(subjectId);
+			if (!result || result.length === 0) {
+				return ServiceResponse.failure("No exams found for this subject", null, StatusCodes.NOT_FOUND);
+			}
+			return ServiceResponse.success<Exam[]>("Exams found", result);
+		} catch (error) {
+			const errorMessage = `Error finding exams for subject ${subjectId}: ${(error as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure(
+				"An error occurred while retrieving exams.",
 				null,
 				StatusCodes.INTERNAL_SERVER_ERROR,
 			);
@@ -117,6 +150,48 @@ export class ExamService {
 			logger.error(errorMessage);
 			return ServiceResponse.failure(
 				"An error occurred while updating an exam.",
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	// Get exam detail with questions and answers (hides is_correct)
+	async getExamDetail(id: string): Promise<ServiceResponse<any | null>> {
+		try {
+			const exam = await this.examRepository.getById(id);
+			if (!exam) {
+				return ServiceResponse.failure("Exam not found", null, StatusCodes.NOT_FOUND);
+			}
+
+			// Get all exam_questions for this exam
+			const examQuestions = await this.examQuestionRepository.getQuestionsByExamId(id);
+
+			// Build questions with answers
+			const questions = await Promise.all(
+				examQuestions.map(async (eq) => {
+					const question = await this.questionRepository.getById(eq.question_id);
+					const answers = await this.answerRepository.getByQuestionId(eq.question_id);
+
+					// Hide is_correct from answers so students can't cheat
+					const sanitizedAnswers = answers.map(({ is_correct, ...rest }) => rest);
+
+					return {
+						...question,
+						answers: sanitizedAnswers,
+					};
+				}),
+			);
+
+			return ServiceResponse.success("Exam detail found", {
+				exam,
+				questions,
+			});
+		} catch (error) {
+			const errorMessage = `Error getting exam detail for id ${id}: ${(error as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure(
+				"An error occurred while retrieving exam detail.",
 				null,
 				StatusCodes.INTERNAL_SERVER_ERROR,
 			);

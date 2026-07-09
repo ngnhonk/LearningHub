@@ -50,6 +50,25 @@ export class QuestionService {
 		}
 	}
 
+	// Retrieves all questions created by a specific user
+	async getByCreatedBy(userId: string): Promise<ServiceResponse<Question[] | null>> {
+		try {
+			const result = await this.questionRepository.getByCreatedBy(userId);
+			if (!result || result.length === 0) {
+				return ServiceResponse.failure("No questions found for this user", null, StatusCodes.NOT_FOUND);
+			}
+			return ServiceResponse.success<Question[]>("Questions found", result);
+		} catch (error) {
+			const errorMessage = `Error finding questions for user ${userId}: ${(error as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure(
+				"An error occurred while retrieving questions.",
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
 	async deleteById(id: string): Promise<ServiceResponse<number | null>> {
 		try {
 			const result = await this.questionRepository.deleteById(id);

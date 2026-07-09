@@ -18,6 +18,7 @@ import { examQuestionRouter } from "./api/exam_questions/exam_question.route";
 import { examRouter } from "./api/exams/exam.route";
 import { userExamAttemptRouter } from "./api/user_exam_attempts/user_exam_attempt.route";
 import { userAnswerRouter } from "./api/user_answers/user_answer.route";
+import { statisticsRouter } from "./api/statistics/statistics.route";
 
 const logger = pino({ name: "server start" });
 const app: Express = express();
@@ -49,6 +50,7 @@ app.use("/exam-questions", examQuestionRouter);
 app.use("/exams", examRouter);
 app.use("/user-exam-attempts", userExamAttemptRouter);
 app.use("/user-answers", userAnswerRouter);
+app.use("/statistics", statisticsRouter);
 
 // Swagger UI
 app.use(openAPIRouter);

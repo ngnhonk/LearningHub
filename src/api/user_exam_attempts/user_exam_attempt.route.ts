@@ -122,6 +122,23 @@ userExamAttemptRouter.put(
   userExamAttemptController.submitAttempt,
 );
 
+// get attempt result (detailed review)
+userExamAttemptRegistry.registerPath({
+  method: "get",
+  path: "/user-exam-attempts/{id}/result",
+  summary: "Get detailed result of an exam attempt",
+  tags: ["UserExamAttempt"],
+  request: { params: GetUserExamAttemptSchema.shape.params },
+  responses: createApiResponse(UserExamAttemptSchema, "Success"),
+});
+
+userExamAttemptRouter.get(
+  "/:id/result",
+  authenticate,
+  validateRequest(GetUserExamAttemptSchema),
+  userExamAttemptController.getAttemptResult,
+);
+
 // get one by id
 userExamAttemptRegistry.registerPath({
   method: "get",

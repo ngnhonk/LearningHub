@@ -43,6 +43,18 @@ class ExamController {
 		const serviceResponse = await examService.deleteById(id);
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
+
+	public getBySubjectId: RequestHandler = async (req: Request, res: Response) => {
+		const subjectId = req.params.subjectId as string;
+		const serviceResponse = await examService.getBySubjectId(subjectId);
+		res.status(serviceResponse.statusCode).send(serviceResponse);
+	};
+
+	public getExamDetail: RequestHandler = async (req: Request, res: Response) => {
+		const id = req.params.id as string;
+		const serviceResponse = await examService.getExamDetail(id);
+		res.status(serviceResponse.statusCode).send(serviceResponse);
+	};
 }
 
 export const examController = new ExamController();

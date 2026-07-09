@@ -32,6 +32,12 @@ class AnswerController {
 		const serviceResponse = await answerService.deleteById(id);
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
+
+	public getByQuestionId: RequestHandler = async (req: Request, res: Response) => {
+		const questionId = req.params.questionId as string;
+		const serviceResponse = await answerService.getByQuestionId(questionId);
+		res.status(serviceResponse.statusCode).send(serviceResponse);
+	};
 }
 
 export const answerController = new AnswerController();

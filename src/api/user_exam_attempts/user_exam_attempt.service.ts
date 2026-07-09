@@ -5,17 +5,29 @@ import { logger } from "@/server";
 import type { UserExamAttempt } from "./user_exam_attempt.model";
 import { UserExamAttemptRepository } from "./user_exam_attempt.repository";
 import { ExamRepository } from "@/api/exams/exam.repository";
+import { UserAnswerRepository } from "@/api/user_answers/user_answer.repository";
+import { QuestionRepository } from "@/api/questions/question.repository";
+import { AnswerRepository } from "@/api/answers/answer.repository";
 
 export class UserExamAttemptService {
 	private attemptRepository: UserExamAttemptRepository;
 	private examRepository: ExamRepository;
+	private userAnswerRepository: UserAnswerRepository;
+	private questionRepository: QuestionRepository;
+	private answerRepository: AnswerRepository;
 
 	constructor(
 		attemptRepository: UserExamAttemptRepository = new UserExamAttemptRepository(),
 		examRepository: ExamRepository = new ExamRepository(),
+		userAnswerRepository: UserAnswerRepository = new UserAnswerRepository(),
+		questionRepository: QuestionRepository = new QuestionRepository(),
+		answerRepository: AnswerRepository = new AnswerRepository(),
 	) {
 		this.attemptRepository = attemptRepository;
 		this.examRepository = examRepository;
+		this.userAnswerRepository = userAnswerRepository;
+		this.questionRepository = questionRepository;
+		this.answerRepository = answerRepository;
 	}
 
 	// Retrieves all user exam attempts
@@ -188,6 +200,64 @@ export class UserExamAttemptService {
 			logger.error(errorMessage);
 			return ServiceResponse.failure(
 				"An error occurred while deleting the user exam attempt.",
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	// Get detailed result of an attempt
+	async getAttemptResult(id: string): Promise<ServiceResponse<any | null>> {
+		try {
+			const attempt = await this.attemptRepository.getById(id);
+			if (!attempt) {
+				return ServiceResponse.failure("User Exam Attempt not found", null, StatusCodes.NOT_FOUND);
+			}
+			if (attempt.status === "in_progress") {
+				return ServiceResponse.failure(
+					"Cannot view result for an in-progress attempt",
+					null,
+					StatusCodes.BAD_REQUEST,
+				);
+			}
+
+			// Get all user answers for this attempt
+			const userAnswers = await this.userAnswerRepository.getByAttemptId(id);
+
+			// Build detailed results
+			const details = await Promise.all(
+				userAnswers.map(async (ua) => {
+					const question = await this.questionRepository.getById(ua.question_id);
+					const selectedAnswer = await this.answerRepository.getById(ua.selected_answer_id);
+
+					// Find the correct answer for this question
+					const allAnswers = await this.answerRepository.getByQuestionId(ua.question_id);
+					const correctAnswer = allAnswers.find((a) => a.is_correct);
+
+					return {
+						question,
+						selected_answer: selectedAnswer,
+						correct_answer: correctAnswer || null,
+						is_correct: ua.is_correct,
+					};
+				}),
+			);
+
+			const correctCount = details.filter((d) => d.is_correct).length;
+			const wrongCount = details.filter((d) => !d.is_correct).length;
+
+			return ServiceResponse.success("Attempt result found", {
+				attempt,
+				total_questions: details.length,
+				correct_count: correctCount,
+				wrong_count: wrongCount,
+				details,
+			});
+		} catch (error) {
+			const errorMessage = `Error getting attempt result for id ${id}: ${(error as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure(
+				"An error occurred while retrieving attempt result.",
 				null,
 				StatusCodes.INTERNAL_SERVER_ERROR,
 			);

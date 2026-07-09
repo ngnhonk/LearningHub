@@ -48,6 +48,24 @@ export class AnswerService {
 		}
 	}
 
+	async getByQuestionId(questionId: string): Promise<ServiceResponse<Answer[] | null>> {
+		try {
+			const answers = await this.answerRepository.getByQuestionId(questionId);
+			if (!answers || answers.length === 0) {
+				return ServiceResponse.failure("No answers found for this question", null, StatusCodes.NOT_FOUND);
+			}
+			return ServiceResponse.success<Answer[]>("Answers found", answers);
+		} catch (error) {
+			const errorMessage = `Error finding answers for question ${questionId}: ${(error as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure(
+				"An error occurred while retrieving answers.",
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
 	async deleteById(id: string): Promise<ServiceResponse<number | null>> {
 		try {
 			const answer = await this.answerRepository.deleteById(id);

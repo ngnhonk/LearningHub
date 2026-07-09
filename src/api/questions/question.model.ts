@@ -36,3 +36,7 @@ export const DeleteQuestionSchema = z.object({
 });
 
 export const GetQuestionResponseSchema = GetQuestionSchema;
+
+export const GetByCreatedBySchema = z.object({
+	params: z.object({ userId: commonValidations.id }),
+});

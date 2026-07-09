@@ -45,6 +45,12 @@ class UserExamAttemptController {
 		const serviceResponse = await userExamAttemptService.deleteById(id);
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
+
+	public getAttemptResult: RequestHandler = async (req: Request, res: Response) => {
+		const id = req.params.id as string;
+		const serviceResponse = await userExamAttemptService.getAttemptResult(id);
+		res.status(serviceResponse.statusCode).send(serviceResponse);
+	};
 }
 
 export const userExamAttemptController = new UserExamAttemptController();

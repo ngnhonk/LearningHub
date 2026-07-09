@@ -9,6 +9,7 @@ import { examQuestionRegistry } from "@/api/exam_questions/exam_question.route";
 import { examRegistry } from "@/api/exams/exam.route";
 import { userExamAttemptRegistry } from "@/api/user_exam_attempts/user_exam_attempt.route";
 import { userAnswerRegistry } from "@/api/user_answers/user_answer.route";
+import { statisticsRegistry } from "@/api/statistics/statistics.route";
 export type OpenAPIDocument = ReturnType<OpenApiGeneratorV3["generateDocument"]>;
 
 export function generateOpenAPIDocument(): OpenAPIDocument {
@@ -23,6 +24,7 @@ export function generateOpenAPIDocument(): OpenAPIDocument {
 		examQuestionRegistry,
 		userExamAttemptRegistry,
 		userAnswerRegistry,
+		statisticsRegistry,
 	]);
 	registry.registerComponent("securitySchemes", "bearerAuth", {
 		type: "http",

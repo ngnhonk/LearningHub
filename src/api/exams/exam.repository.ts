@@ -10,6 +10,10 @@ export class ExamRepository {
 		return await db("exams").where({ id }).first();
 	}
 
+	async getBySubjectId(subjectId: string): Promise<Exam[]> {
+		return await db("exams").where({ subject_id: subjectId }).select("*");
+	}
+
 	async deleteById(id: string): Promise<number | null> {
 		return await db("exams").where({ id }).del();
 	}
