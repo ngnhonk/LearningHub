@@ -10,6 +10,10 @@ export class AnswerRepository {
 		return await db("answers").where({ id }).first();
 	}
 
+	async getByQuestionId(questionId: string): Promise<Answer[]> {
+		return await db("answers").where({ question_id: questionId }).select("*");
+	}
+
 	async deleteById(id: string): Promise<number | null> {
 		return await db("answers").where({ id }).del();
 	}

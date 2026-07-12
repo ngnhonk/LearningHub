@@ -33,6 +33,12 @@ class QuestionController {
 		const serviceResponse = await questionService.deleteById(id);
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
+
+	public getByCreatedBy: RequestHandler = async (req: Request, res: Response) => {
+		const userId = req.params.userId as string;
+		const serviceResponse = await questionService.getByCreatedBy(userId);
+		res.status(serviceResponse.statusCode).send(serviceResponse);
+	};
 }
 
 export const questionController = new QuestionController();

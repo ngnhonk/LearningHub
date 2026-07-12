@@ -7,6 +7,7 @@ import {
 	DeleteAnswerSchema,
 	GetAnswerSchema,
 	UpdateAnswerSchema,
+	GetByQuestionIdSchema,
 } from "@/api/answers/answer.model";
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
 import { validateRequest } from "@/common/utils/httpHandlers";
@@ -27,6 +28,22 @@ answerRegistry.registerPath({
 });
 
 answerRouter.get("/", answerController.getAnswers);
+
+// get answers by question id
+answerRegistry.registerPath({
+	method: "get",
+	path: "/answers/question/{questionId}",
+	tags: ["Answer"],
+	summary: "Get all answers by question id",
+	request: { params: GetByQuestionIdSchema.shape.params },
+	responses: createApiResponse(z.array(AnswerSchema), "Success"),
+});
+
+answerRouter.get(
+	"/question/:questionId",
+	validateRequest(GetByQuestionIdSchema),
+	answerController.getByQuestionId,
+);
 
 // get answer by id
 answerRegistry.registerPath({

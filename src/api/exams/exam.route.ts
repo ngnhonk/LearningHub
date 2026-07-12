@@ -11,8 +11,11 @@ import {
   GetExamSchema,
   ExamSchema,
   UpdateExamSchema,
+  GetBySubjectIdSchema,
+  GetExamDetailSchema,
 } from "./exam.model";
 import { authenticate, authorize } from "@/common/middleware/authenticate";
+import { uploadExcel } from "@/common/middleware/upload";
 
 export const examRegistry = new OpenAPIRegistry();
 export const examRouter: Router = express.Router();
@@ -29,6 +32,22 @@ examRegistry.registerPath({
 });
 
 examRouter.get("/", examController.getExams);
+
+// get exams by subject id
+examRegistry.registerPath({
+  method: "get",
+  path: "/exams/subject/{subjectId}",
+  summary: "Get all exams by subject id",
+  tags: ["Exam"],
+  request: { params: GetBySubjectIdSchema.shape.params },
+  responses: createApiResponse(z.array(ExamSchema), "Success"),
+});
+
+examRouter.get(
+  "/subject/:subjectId",
+  validateRequest(GetBySubjectIdSchema),
+  examController.getBySubjectId,
+);
 
 // get one by id
 examRegistry.registerPath({
@@ -111,4 +130,58 @@ examRouter.delete(
   "/:id",
   validateRequest(DeleteExamSchema),
   examController.deleteExam,
+);
+
+// get exam detail (exam + questions + answers, hides is_correct)
+examRegistry.registerPath({
+  method: "get",
+  path: "/exams/{id}/detail",
+  summary: "Get exam detail with questions and answers (hides is_correct)",
+  tags: ["Exam"],
+  request: { params: GetExamDetailSchema.shape.params },
+  responses: createApiResponse(ExamSchema, "Success"),
+});
+
+examRouter.get(
+  "/:id/detail",
+  validateRequest(GetExamDetailSchema),
+  examController.getExamDetail,
+);
+
+// import exam from excel
+examRegistry.registerPath({
+  method: "post",
+  path: "/exams/import",
+  tags: ["Exam"],
+  summary: "Import exam and questions from Excel",
+  request: {
+    body: {
+      content: {
+        "multipart/form-data": {
+          schema: {
+            type: "object",
+            properties: {
+              subject_id: {
+                type: "string",
+                description: "ID of the subject",
+              },
+              file: {
+                type: "string",
+                format: "binary",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  responses: createApiResponse(ExamSchema, "Success"),
+});
+
+examRouter.post(
+  "/import",
+  authenticate,
+  authorize(["admin"]),
+  uploadExcel.single("file"),
+  examController.importFromExcel,
 );
