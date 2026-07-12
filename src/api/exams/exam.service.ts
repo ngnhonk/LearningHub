@@ -33,7 +33,11 @@ export class ExamService {
 		try {
 			const result = await this.examRepository.getAll();
 			if (!result || result.length === 0) {
-				return ServiceResponse.failure("No Exams found", null, StatusCodes.NOT_FOUND);
+				return ServiceResponse.failure(
+					"No Exams found",
+					null,
+					StatusCodes.NOT_FOUND,
+				);
 			}
 			return ServiceResponse.success<Exam[]>("Exams found", result);
 		} catch (error) {
@@ -52,7 +56,11 @@ export class ExamService {
 		try {
 			const result = await this.examRepository.getById(id);
 			if (!result) {
-				return ServiceResponse.failure("Exam not found", null, StatusCodes.NOT_FOUND);
+				return ServiceResponse.failure(
+					"Exam not found",
+					null,
+					StatusCodes.NOT_FOUND,
+				);
 			}
 			return ServiceResponse.success<Exam>("Exam found", result);
 		} catch (error) {
@@ -67,11 +75,17 @@ export class ExamService {
 	}
 
 	// Retrieves all exams by subject ID
-	async getBySubjectId(subjectId: string): Promise<ServiceResponse<Exam[] | null>> {
+	async getBySubjectId(
+		subjectId: string,
+	): Promise<ServiceResponse<Exam[] | null>> {
 		try {
 			const result = await this.examRepository.getBySubjectId(subjectId);
 			if (!result || result.length === 0) {
-				return ServiceResponse.failure("No exams found for this subject", null, StatusCodes.NOT_FOUND);
+				return ServiceResponse.failure(
+					"No exams found for this subject",
+					null,
+					StatusCodes.NOT_FOUND,
+				);
 			}
 			return ServiceResponse.success<Exam[]>("Exams found", result);
 		} catch (error) {
@@ -89,7 +103,11 @@ export class ExamService {
 		try {
 			const result = await this.examRepository.deleteById(id);
 			if (!result) {
-				return ServiceResponse.failure("Exam not found", null, StatusCodes.NOT_FOUND);
+				return ServiceResponse.failure(
+					"Exam not found",
+					null,
+					StatusCodes.NOT_FOUND,
+				);
 			}
 			return ServiceResponse.success<number>("Exam deleted", result);
 		} catch (error) {
@@ -126,7 +144,10 @@ export class ExamService {
 				is_published,
 				created_by,
 			});
-			return ServiceResponse.success<number>("Exam created successfully", newExam);
+			return ServiceResponse.success<number>(
+				"Exam created successfully",
+				newExam,
+			);
 		} catch (error) {
 			const errorMessage = `Error creating exam: ${(error as Error).message}`;
 			logger.error(errorMessage);
@@ -138,15 +159,25 @@ export class ExamService {
 		}
 	}
 
-	async updateExam(id: string, payload: Partial<Omit<Exam, "id" | "created_by" | "created_at">>): Promise<ServiceResponse<Exam | null>> {
+	async updateExam(
+		id: string,
+		payload: Partial<Omit<Exam, "id" | "created_by" | "created_at">>,
+	): Promise<ServiceResponse<Exam | null>> {
 		try {
 			const existingExam = await this.examRepository.getById(id);
 			if (!existingExam) {
-				return ServiceResponse.failure("Exam not found", null, StatusCodes.NOT_FOUND);
+				return ServiceResponse.failure(
+					"Exam not found",
+					null,
+					StatusCodes.NOT_FOUND,
+				);
 			}
 			await this.examRepository.updateExam(id, payload);
 			const updatedExam = await this.examRepository.getById(id);
-			return ServiceResponse.success<Exam>("Exam updated successfully", updatedExam as Exam);
+			return ServiceResponse.success<Exam>(
+				"Exam updated successfully",
+				updatedExam as Exam,
+			);
 		} catch (error) {
 			const errorMessage = `Error updating exam with id ${id}: ${(error as Error).message}`;
 			logger.error(errorMessage);
@@ -163,20 +194,31 @@ export class ExamService {
 		try {
 			const exam = await this.examRepository.getById(id);
 			if (!exam) {
-				return ServiceResponse.failure("Exam not found", null, StatusCodes.NOT_FOUND);
+				return ServiceResponse.failure(
+					"Exam not found",
+					null,
+					StatusCodes.NOT_FOUND,
+				);
 			}
 
 			// Get all exam_questions for this exam
-			const examQuestions = await this.examQuestionRepository.getQuestionsByExamId(id);
+			const examQuestions =
+				await this.examQuestionRepository.getQuestionsByExamId(id);
 
 			// Build questions with answers
 			const questions = await Promise.all(
 				examQuestions.map(async (eq) => {
-					const question = await this.questionRepository.getById(eq.question_id);
-					const answers = await this.answerRepository.getByQuestionId(eq.question_id);
+					const question = await this.questionRepository.getById(
+						eq.question_id,
+					);
+					const answers = await this.answerRepository.getByQuestionId(
+						eq.question_id,
+					);
 
 					// Hide is_correct from answers so students can't cheat
-					const sanitizedAnswers = answers.map(({ is_correct, ...rest }) => rest);
+					const sanitizedAnswers = answers.map(
+						({ is_correct, ...rest }) => rest,
+					);
 
 					return {
 						...question,
@@ -200,7 +242,109 @@ export class ExamService {
 		}
 	}
 
-	async importFromExcel(fileBuffer: Buffer, created_by: string, subject_id?: string): Promise<ServiceResponse<any | null>> {
+	// async importFromExcel(fileBuffer: Buffer, created_by: string, subject_id?: string): Promise<ServiceResponse<any | null>> {
+	// 	try {
+	// 		const workbook = xlsx.read(fileBuffer, { type: "buffer" });
+
+	// 		const examSheet = workbook.Sheets["Exam"];
+	// 		const questionSheet = workbook.Sheets["Questions"];
+
+	// 		if (!examSheet || !questionSheet) {
+	// 			return ServiceResponse.failure("File Excel must have 'Exam' and 'Questions' sheets", null, StatusCodes.BAD_REQUEST);
+	// 		}
+
+	// 		const examData: any[] = xlsx.utils.sheet_to_json(examSheet);
+	// 		if (examData.length === 0) {
+	// 			return ServiceResponse.failure("No exam data found in 'Exam' sheet", null, StatusCodes.BAD_REQUEST);
+	// 		}
+
+	// 		const examInfo = examData[0];
+	// 		const questionsData: any[] = xlsx.utils.sheet_to_json(questionSheet);
+
+	// 		if (questionsData.length === 0) {
+	// 			return ServiceResponse.failure("No questions found in 'Questions' sheet", null, StatusCodes.BAD_REQUEST);
+	// 		}
+
+	// 		const finalSubjectId = subject_id || examInfo.SubjectId;
+	// 		if (!finalSubjectId) {
+	// 			return ServiceResponse.failure("subject_id is required either in Excel or in form data", null, StatusCodes.BAD_REQUEST);
+	// 		}
+
+	// 		// Validate and process inside a transaction
+	// 		return await db.transaction(async (trx: any) => {
+	// 			const examId = uuidv7();
+
+	// 			// 1. Create Exam
+	// 			await trx("exams").insert({
+	// 				id: examId,
+	// 				title: examInfo.Title || "Untitled Exam",
+	// 				description: examInfo.Description || "",
+	// 				subject_id: finalSubjectId,
+	// 				duration_minutes: examInfo.Duration || 60,
+	// 				total_marks: examInfo.TotalMarks || 100,
+	// 				pass_percentage: examInfo.PassPercentage || 50,
+	// 				is_published: examInfo.IsPublished || false,
+	// 				created_by,
+	// 			});
+
+	// 			// 2. Create Questions and Answers
+	// 			for (const qRow of questionsData) {
+	// 				const questionId = uuidv7();
+
+	// 				// Create Question
+	// 				await trx("questions").insert({
+	// 					id: questionId,
+	// 					content: qRow.Content,
+	// 					created_by,
+	// 				});
+
+	// 				// Create Answers (4 options)
+	// 				const correctAnswerIndex = parseInt(qRow.Correct, 10);
+
+	// 				const answers = [
+	// 					{ content: qRow.Option1, is_correct: correctAnswerIndex === 1 },
+	// 					{ content: qRow.Option2, is_correct: correctAnswerIndex === 2 },
+	// 					{ content: qRow.Option3, is_correct: correctAnswerIndex === 3 },
+	// 					{ content: qRow.Option4, is_correct: correctAnswerIndex === 4 },
+	// 				];
+
+	// 				for (const answer of answers) {
+	// 					if (answer.content) { // Only create if option has content
+	// 						await trx("answers").insert({
+	// 							id: uuidv7(),
+	// 							question_id: questionId,
+	// 							content: String(answer.content),
+	// 							is_correct: answer.is_correct,
+	// 						});
+	// 					}
+	// 				}
+
+	// 				// 3. Link Question to Exam
+	// 				await trx("exam_questions").insert({
+	// 					id: uuidv7(),
+	// 					exam_id: examId,
+	// 					question_id: questionId,
+	// 				});
+	// 			}
+
+	// 			return ServiceResponse.success("Exam and questions imported successfully", { examId });
+	// 		});
+
+	// 	} catch (error) {
+	// 		const errorMessage = `Error importing exam from Excel: ${(error as Error).message}`;
+	// 		logger.error(errorMessage);
+	// 		return ServiceResponse.failure(
+	// 			"An error occurred while importing exam.",
+	// 			null,
+	// 			StatusCodes.INTERNAL_SERVER_ERROR,
+	// 		);
+	// 	}
+	// }
+	async importFromExcel(
+		fileBuffer: Buffer,
+		created_by: string,
+		subject_id?: string,
+	): Promise<ServiceResponse<any | null>> {
 		try {
 			const workbook = xlsx.read(fileBuffer, { type: "buffer" });
 
@@ -208,86 +352,82 @@ export class ExamService {
 			const questionSheet = workbook.Sheets["Questions"];
 
 			if (!examSheet || !questionSheet) {
-				return ServiceResponse.failure("File Excel must have 'Exam' and 'Questions' sheets", null, StatusCodes.BAD_REQUEST);
+				return ServiceResponse.failure(
+					"File Excel must have 'Exam' and 'Questions' sheets",
+					null,
+					StatusCodes.BAD_REQUEST,
+				);
 			}
 
 			const examData: any[] = xlsx.utils.sheet_to_json(examSheet);
 			if (examData.length === 0) {
-				return ServiceResponse.failure("No exam data found in 'Exam' sheet", null, StatusCodes.BAD_REQUEST);
+				return ServiceResponse.failure(
+					"No exam data found in 'Exam' sheet",
+					null,
+					StatusCodes.BAD_REQUEST,
+				);
 			}
 
 			const examInfo = examData[0];
 			const questionsData: any[] = xlsx.utils.sheet_to_json(questionSheet);
 
 			if (questionsData.length === 0) {
-				return ServiceResponse.failure("No questions found in 'Questions' sheet", null, StatusCodes.BAD_REQUEST);
+				return ServiceResponse.failure(
+					"No questions found in 'Questions' sheet",
+					null,
+					StatusCodes.BAD_REQUEST,
+				);
 			}
 
 			const finalSubjectId = subject_id || examInfo.SubjectId;
 			if (!finalSubjectId) {
-				return ServiceResponse.failure("subject_id is required either in Excel or in form data", null, StatusCodes.BAD_REQUEST);
+				return ServiceResponse.failure(
+					"subject_id is required either in Excel or in form data",
+					null,
+					StatusCodes.BAD_REQUEST,
+				);
 			}
 
-			// Validate and process inside a transaction
-			return await db.transaction(async (trx: any) => {
-				const examId = uuidv7();
+			const examInput = {
+				title: examInfo.Title || "Untitled Exam",
+				description: examInfo.Description || "",
+				subject_id: finalSubjectId,
+				duration_minutes: examInfo.Duration || 60,
+				total_marks: examInfo.TotalMarks || 100,
+				pass_percentage: examInfo.PassPercentage || 50,
+				is_published: examInfo.IsPublished || false,
+				created_by,
+			};
 
-				// 1. Create Exam
-				await trx("exams").insert({
-					id: examId,
-					title: examInfo.Title || "Untitled Exam",
-					description: examInfo.Description || "",
-					subject_id: finalSubjectId,
-					duration_minutes: examInfo.Duration || 60,
-					total_marks: examInfo.TotalMarks || 100,
-					pass_percentage: examInfo.PassPercentage || 50,
-					is_published: examInfo.IsPublished || false,
-					created_by,
-				});
+			const questions = questionsData.map((qRow) => {
+				const correctAnswerIndex = parseInt(qRow.Correct, 10);
+				const rawAnswers = [
+					{ content: qRow.Option1, is_correct: correctAnswerIndex === 1 },
+					{ content: qRow.Option2, is_correct: correctAnswerIndex === 2 },
+					{ content: qRow.Option3, is_correct: correctAnswerIndex === 3 },
+					{ content: qRow.Option4, is_correct: correctAnswerIndex === 4 },
+				];
 
-				// 2. Create Questions and Answers
-				for (const qRow of questionsData) {
-					const questionId = uuidv7();
-
-					// Create Question
-					await trx("questions").insert({
-						id: questionId,
-						content: qRow.Content,
-						created_by,
-					});
-
-					// Create Answers (4 options)
-					const correctAnswerIndex = parseInt(qRow.Correct, 10);
-
-					const answers = [
-						{ content: qRow.Option1, is_correct: correctAnswerIndex === 1 },
-						{ content: qRow.Option2, is_correct: correctAnswerIndex === 2 },
-						{ content: qRow.Option3, is_correct: correctAnswerIndex === 3 },
-						{ content: qRow.Option4, is_correct: correctAnswerIndex === 4 },
-					];
-
-					for (const answer of answers) {
-						if (answer.content) { // Only create if option has content
-							await trx("answers").insert({
-								id: uuidv7(),
-								question_id: questionId,
-								content: String(answer.content),
-								is_correct: answer.is_correct,
-							});
-						}
-					}
-
-					// 3. Link Question to Exam
-					await trx("exam_questions").insert({
-						id: uuidv7(),
-						exam_id: examId,
-						question_id: questionId,
-					});
-				}
-
-				return ServiceResponse.success("Exam and questions imported successfully", { examId });
+				return {
+					content: qRow.Content,
+					answers: rawAnswers
+						.filter((a) => a.content) // Only keep options with content
+						.map((a) => ({
+							content: String(a.content),
+							is_correct: a.is_correct,
+						})),
+				};
 			});
 
+			const examId = await this.examRepository.importExamWithQuestions(
+				examInput,
+				questions,
+			);
+
+			return ServiceResponse.success(
+				"Exam and questions imported successfully",
+				{ examId },
+			);
 		} catch (error) {
 			const errorMessage = `Error importing exam from Excel: ${(error as Error).message}`;
 			logger.error(errorMessage);
