@@ -33,6 +33,32 @@ const envSchema = z.object({
 	JWT_REFRESH_TOKEN_TIME: z.string(),
 	TOKEN_HASH_SECRET: z.string(),
 	SALT_ROUNDS: z.string(),
+
+	// AI Provider
+	AI_DEFAULT_PROVIDER: z.enum(["openrouter", "ollama", "nvidia"]).default("openrouter"),
+	AI_DEFAULT_MODEL: z.string().default("google/gemini-2.5-flash"),
+
+	// OpenRouter
+	OPENROUTER_API_KEY: z.string().default(""),
+
+	// Ollama (local)
+	OLLAMA_BASE_URL: z.string().default("http://localhost:11434"),
+	OLLAMA_MODEL: z.string().default("llama3.1"),
+	OLLAMA_EMBED_MODEL: z.string().default("nomic-embed-text"),
+
+	// NVIDIA NIM
+	NVIDIA_API_KEY: z.string().default(""),
+	NVIDIA_MODEL: z.string().default("meta/llama-3.1-70b-instruct"),
+
+	// Qdrant
+	QDRANT_HOST: z.string().default("localhost"),
+	QDRANT_PORT: z.coerce.number().int().positive().default(6333),
+	QDRANT_API_KEY: z.string().default(""),
+	QDRANT_COLLECTION: z.string().default("learning_documents"),
+
+	// Embedding
+	EMBEDDING_MODEL: z.string().default("openai/text-embedding-3-small"),
+	EMBEDDING_DIMENSIONS: z.coerce.number().int().positive().default(1536),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
