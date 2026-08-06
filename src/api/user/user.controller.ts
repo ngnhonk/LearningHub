@@ -37,6 +37,15 @@ class UserController {
     const serviceResponse = await userService.changeAvatar(userId, file);
     res.status(serviceResponse.statusCode).send(serviceResponse);
   };
+
+  public changeUserRole: RequestHandler = async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ) => {
+    const { id, newRole } = req.body;
+    const serviceResponse = await userService.changeUserRole(id, newRole);
+    res.status(serviceResponse.statusCode).send(serviceResponse);
+  };
 }
 
 export const userController = new UserController();

@@ -137,41 +137,76 @@ export class UserService {
   }
 
   async changeAvatar(
-		userId: string,
-		file: Express.Multer.File,
-	): Promise<ServiceResponse<User | null>> {
-		try {
-			if (!file) {
-				return ServiceResponse.failure(
-					"No avatar image file uploaded or invalid file format",
-					null,
-					StatusCodes.BAD_REQUEST,
-				);
-			}
+    userId: string,
+    file: Express.Multer.File,
+  ): Promise<ServiceResponse<User | null>> {
+    try {
+      if (!file) {
+        return ServiceResponse.failure(
+          "No avatar image file uploaded or invalid file format",
+          null,
+          StatusCodes.BAD_REQUEST,
+        );
+      }
 
-			const user = await this.userRepository.getById(userId);
-			if (!user) {
-				return ServiceResponse.failure(
-					"User not found",
-					null,
-					StatusCodes.NOT_FOUND,
-				);
-			}
+      const user = await this.userRepository.getById(userId);
+      if (!user) {
+        return ServiceResponse.failure(
+          "User not found",
+          null,
+          StatusCodes.NOT_FOUND,
+        );
+      }
 
-			const avatarUrl = `/uploads/avatars/${file.filename}`;
-			const updatedUser = await this.userRepository.addAvatar(userId, avatarUrl);
+      const avatarUrl = `/uploads/avatars/${file.filename}`;
+      const updatedUser = await this.userRepository.addAvatar(
+        userId,
+        avatarUrl,
+      );
 
-			return ServiceResponse.success<User>("Avatar updated successfully", updatedUser);
-		} catch (error) {
-			const errorMessage = `Error changing avatar for user ${userId || "unknown"}: ${(error as Error).message}`;
-			logger.error(errorMessage);
-			return ServiceResponse.failure(
-				"An error occurred while changing avatar.",
-				null,
-				StatusCodes.INTERNAL_SERVER_ERROR,
-			);
-		}
-	}
+      return ServiceResponse.success<User>(
+        "Avatar updated successfully",
+        updatedUser,
+      );
+    } catch (error) {
+      const errorMessage = `Error changing avatar for user ${userId || "unknown"}: ${(error as Error).message}`;
+      logger.error(errorMessage);
+      return ServiceResponse.failure(
+        "An error occurred while changing avatar.",
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async changeUserRole(
+    id: string,
+    newRole: string,
+  ): Promise<ServiceResponse<User | null>> {
+    try {
+      const user = await this.userRepository.getById(id);
+      if (!user) {
+        return ServiceResponse.failure(
+          "User not found",
+          null,
+          StatusCodes.NOT_FOUND,
+        );
+      }
+      await this.userRepository.changeUserRole(id, newRole);
+      return ServiceResponse.success<null>(
+        "User role changed successfully",
+        null,
+      );
+    } catch (error) {
+      const errorMessage = `Error changing user role for user ${id || "unknown"}: ${(error as Error).message}`;
+      logger.error(errorMessage);
+      return ServiceResponse.failure(
+        "An error occurred while changing user role.",
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }
 
 export const userService = new UserService();

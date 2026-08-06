@@ -35,3 +35,13 @@ export const GetUserSchema = z.object({
 
 export const GetUserResponseSchema = UserSchema;
 
+export const ChangeUserRoleSchema = z.object({
+	body: z.object({
+		id: commonValidations.id,
+		newRole: commonValidations.role,
+	}),
+});
+
+export const ChangeUserRoleResponseSchema = z.object({
+	id: commonValidations.id,
+});
