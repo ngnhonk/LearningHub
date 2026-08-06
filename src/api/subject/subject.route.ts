@@ -11,6 +11,7 @@ import {
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { subjectController } from "./subject.controller";
+import { authenticate, authorize, TEACHER_OR_ABOVE } from "@/common/middleware/authenticate";
 
 export const subjectRegistry = new OpenAPIRegistry();
 export const subjectRouter: Router = express.Router();
@@ -38,7 +39,11 @@ subjectRegistry.registerPath({
 	responses: createApiResponse(SubjectSchema, "Success"),
 });
 
-subjectRouter.get("/:id", validateRequest(GetSubjectSchema), subjectController.getSubject);
+subjectRouter.get(
+	"/:id",
+	validateRequest(GetSubjectSchema),
+	subjectController.getSubject,
+);
 
 // create a subject
 subjectRegistry.registerPath({
@@ -58,7 +63,13 @@ subjectRegistry.registerPath({
 	responses: createApiResponse(SubjectSchema, "Success"),
 });
 
-subjectRouter.post("/", validateRequest(CreateSubjectSchema), subjectController.createSubject);
+subjectRouter.post(
+	"/",
+	authenticate,
+	authorize(TEACHER_OR_ABOVE),
+	validateRequest(CreateSubjectSchema),
+	subjectController.createSubject,
+);
 
 // update a subject
 subjectRegistry.registerPath({
@@ -79,7 +90,13 @@ subjectRegistry.registerPath({
 	responses: createApiResponse(SubjectSchema, "Success"),
 });
 
-subjectRouter.put("/:id", validateRequest(UpdateSubjectSchema), subjectController.updateSubject);
+subjectRouter.put(
+	"/:id",
+	authenticate,
+	authorize(TEACHER_OR_ABOVE),
+	validateRequest(UpdateSubjectSchema),
+	subjectController.updateSubject,
+);
 
 // delete a subject by id
 subjectRegistry.registerPath({
@@ -91,4 +108,10 @@ subjectRegistry.registerPath({
 	responses: createApiResponse(z.number(), "Success"),
 });
 
-subjectRouter.delete("/:id", validateRequest(DeleteSubjectSchema), subjectController.deleteSubject);
+subjectRouter.delete(
+	"/:id",
+	authenticate,
+	authorize(TEACHER_OR_ABOVE),
+	validateRequest(DeleteSubjectSchema),
+	subjectController.deleteSubject,
+);
