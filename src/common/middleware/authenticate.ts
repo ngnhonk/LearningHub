@@ -5,6 +5,16 @@ import { logger } from "@/server";
 import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "../models/serviceResponse";
 
+export const uROLES = {
+  USER: "user",
+  TEACHER: "teacher",
+  ADMIN: "admin",
+};
+
+export const ADMIN_ONLY = [uROLES.ADMIN];
+export const TEACHER_OR_ABOVE = [uROLES.TEACHER, uROLES.ADMIN];
+export const USER_OR_ABOVE = [uROLES.USER, uROLES.TEACHER, uROLES.ADMIN];
+
 const { JWT_ACCESS_TOKEN_SECRET } = env;
 
 interface JwtPayload {
