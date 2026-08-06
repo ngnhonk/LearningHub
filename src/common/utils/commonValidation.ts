@@ -74,9 +74,9 @@ export const commonValidations = {
 			message: "Date must be in the past",
 		}),
 
-	role: z.enum(["admin", "student"], {
+	role: z.enum(["admin", "student", "teacher"], {
 		errorMap: () => ({
-			message: "Role must be either 'student' or 'admin'",
+			message: "Role must be either 'student', 'admin' or 'teacher'",
 		}),
 	}),
 

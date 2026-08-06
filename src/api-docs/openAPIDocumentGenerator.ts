@@ -16,8 +16,8 @@ export type OpenAPIDocument = ReturnType<OpenApiGeneratorV3["generateDocument"]>
 export function generateOpenAPIDocument(): OpenAPIDocument {
 	const registry = new OpenAPIRegistry([
 		healthCheckRegistry,
-		userRegistry,
 		authRegistry,
+		userRegistry,
 		subjectRegistry,
 		questionRegistry,
 		answerRegistry,

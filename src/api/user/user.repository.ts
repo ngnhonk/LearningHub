@@ -58,6 +58,12 @@ export class UserRepository {
   }
 
   async changePassword(id: string, newHashedPassword: string): Promise<number> {
-    return await db("users").update({ hashed_password: newHashedPassword }).where({ id });
+    return await db("users")
+      .update({ hashed_password: newHashedPassword })
+      .where({ id });
+  }
+
+  async changeUserRole(id: string, newRole: string): Promise<number> {
+    return await db("users").update({ role: newRole }).where({ id });
   }
 }

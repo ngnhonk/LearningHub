@@ -4,6 +4,8 @@ import { z } from "zod";
 import {
   ChangePasswordResponseSchema,
   ChangePasswordSchema,
+  ChangeUserRoleResponseSchema,
+  ChangeUserRoleSchema,
   GetUserSchema,
   UserSchema,
 } from "@/api/user/user.model";
@@ -40,7 +42,13 @@ userRegistry.registerPath({
   responses: createApiResponse(UserSchema, "Success"),
 });
 
-userRouter.get("/:id", validateRequest(GetUserSchema), userController.getUser);
+userRouter.get(
+  "/:id",
+  authenticate,
+  authorize(["admin"]),
+  validateRequest(GetUserSchema),
+  userController.getUser,
+);
 
 userRegistry.registerPath({
   method: "put",
@@ -58,28 +66,53 @@ userRegistry.registerPath({
   responses: createApiResponse(ChangePasswordResponseSchema, "Success"),
 });
 
-userRouter.put(
-  "/change-password",
-  authenticate,
-  userController.changePassword,
-);
+userRouter.put("/change-password", authenticate, userController.changePassword);
 
 userRegistry.registerPath({
-	method: "put",
-	path: "/users/change-avatar",
-	tags: ["User"],
-	request: {
-		body: {
-			content: {
-				"multipart/form-data": {
-					schema: z.object({
-						avatar: z.string().openapi({ type: "string", format: "binary" }),
-					}),
-				},
-			},
-		},
-	},
-	responses: createApiResponse(UserSchema, "Success"),
+  method: "put",
+  path: "/users/change-avatar",
+  tags: ["User"],
+  request: {
+    body: {
+      content: {
+        "multipart/form-data": {
+          schema: z.object({
+            avatar: z.string().openapi({ type: "string", format: "binary" }),
+          }),
+        },
+      },
+    },
+  },
+  responses: createApiResponse(UserSchema, "Success"),
 });
 
-userRouter.put("/change-avatar", authenticate, uploadAvatar.single("avatar"), userController.changeAvatar);
+userRouter.put(
+  "/change-avatar",
+  authenticate,
+  uploadAvatar.single("avatar"),
+  userController.changeAvatar,
+);
+
+
+userRegistry.registerPath({
+  method: "put",
+  path: "/users/change-user-role",
+  tags: ["User"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: ChangeUserRoleSchema.shape.body,
+        },
+      },
+    },
+  },
+  responses: createApiResponse(ChangeUserRoleResponseSchema, "Success"),
+});
+userRouter.put(
+  "/change-user-role",
+  authenticate,
+  authorize(["admin"]),
+  validateRequest(ChangeUserRoleSchema),
+  userController.changeUserRole,
+);
