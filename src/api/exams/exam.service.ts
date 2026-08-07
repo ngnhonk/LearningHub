@@ -9,23 +9,27 @@ import { ExamRepository } from "./exam.repository";
 import { ExamQuestionRepository } from "@/api/exam_questions/exam_question.repository";
 import { QuestionRepository } from "@/api/questions/question.repository";
 import { AnswerRepository } from "@/api/answers/answer.repository";
+import { SubjectRepository } from "@/api/subject/subject.repository";
 
 export class ExamService {
 	private examRepository: ExamRepository;
 	private examQuestionRepository: ExamQuestionRepository;
 	private questionRepository: QuestionRepository;
 	private answerRepository: AnswerRepository;
+	private subjectRepository: SubjectRepository;
 
 	constructor(
 		repository: ExamRepository = new ExamRepository(),
 		examQuestionRepository: ExamQuestionRepository = new ExamQuestionRepository(),
 		questionRepository: QuestionRepository = new QuestionRepository(),
 		answerRepository: AnswerRepository = new AnswerRepository(),
+		subjectRepository: SubjectRepository = new SubjectRepository(),
 	) {
 		this.examRepository = repository;
 		this.examQuestionRepository = examQuestionRepository;
 		this.questionRepository = questionRepository;
 		this.answerRepository = answerRepository;
+		this.subjectRepository = subjectRepository;
 	}
 
 	// Retrieves all exams from the database
@@ -164,6 +168,19 @@ export class ExamService {
 		payload: Partial<Omit<Exam, "id" | "created_by" | "created_at">>,
 	): Promise<ServiceResponse<Exam | null>> {
 		try {
+			if (payload.subject_id) {
+				const existingSubject = await this.subjectRepository.getById(
+					payload.subject_id,
+				);
+				if (!existingSubject) {
+					return ServiceResponse.failure(
+						"Subject not found",
+						null,
+						StatusCodes.BAD_REQUEST,
+					);
+				}
+			}
+
 			const existingExam = await this.examRepository.getById(id);
 			if (!existingExam) {
 				return ServiceResponse.failure(

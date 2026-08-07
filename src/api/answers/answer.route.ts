@@ -12,6 +12,11 @@ import {
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
 import { validateRequest } from "@/common/utils/httpHandlers";
 import { answerController } from "./answer.controller";
+import {
+	authenticate,
+	authorize,
+	TEACHER_OR_ABOVE,
+} from "@/common/middleware/authenticate";
 
 export const answerRegistry = new OpenAPIRegistry();
 export const answerRouter: Router = express.Router();
@@ -27,7 +32,12 @@ answerRegistry.registerPath({
 	responses: createApiResponse(z.array(AnswerSchema), "Success"),
 });
 
-answerRouter.get("/", answerController.getAnswers);
+answerRouter.get(
+	"/",
+	authenticate,
+	authorize(TEACHER_OR_ABOVE),
+	answerController.getAnswers,
+);
 
 // get answers by question id
 answerRegistry.registerPath({
@@ -41,6 +51,8 @@ answerRegistry.registerPath({
 
 answerRouter.get(
 	"/question/:questionId",
+	authenticate,
+	authorize(TEACHER_OR_ABOVE),
 	validateRequest(GetByQuestionIdSchema),
 	answerController.getByQuestionId,
 );
@@ -55,7 +67,13 @@ answerRegistry.registerPath({
 	responses: createApiResponse(AnswerSchema, "Success"),
 });
 
-answerRouter.get("/:id", validateRequest(GetAnswerSchema), answerController.getAnswer);
+answerRouter.get(
+	"/:id",
+	authenticate,
+	authorize(TEACHER_OR_ABOVE),
+	validateRequest(GetAnswerSchema),
+	answerController.getAnswer,
+);
 
 // create an answer
 answerRegistry.registerPath({
@@ -75,7 +93,13 @@ answerRegistry.registerPath({
 	responses: createApiResponse(AnswerSchema, "Success"),
 });
 
-answerRouter.post("/", validateRequest(CreateAnswerSchema), answerController.createAnswer);
+answerRouter.post(
+	"/",
+	authenticate,
+	authorize(TEACHER_OR_ABOVE),
+	validateRequest(CreateAnswerSchema),
+	answerController.createAnswer,
+);
 
 // update an answer
 answerRegistry.registerPath({
@@ -96,7 +120,13 @@ answerRegistry.registerPath({
 	responses: createApiResponse(AnswerSchema, "Success"),
 });
 
-answerRouter.put("/:id", validateRequest(UpdateAnswerSchema), answerController.updateAnswer);
+answerRouter.put(
+	"/:id",
+	authenticate,
+	authorize(TEACHER_OR_ABOVE),
+	validateRequest(UpdateAnswerSchema),
+	answerController.updateAnswer,
+);
 
 // delete an answer by id
 answerRegistry.registerPath({
@@ -108,4 +138,10 @@ answerRegistry.registerPath({
 	responses: createApiResponse(z.number(), "Success"),
 });
 
-answerRouter.delete("/:id", validateRequest(DeleteAnswerSchema), answerController.deleteAnswer);
+answerRouter.delete(
+	"/:id",
+	authenticate,
+	authorize(TEACHER_OR_ABOVE),
+	validateRequest(DeleteAnswerSchema),
+	answerController.deleteAnswer,
+);

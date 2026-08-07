@@ -13,7 +13,7 @@ import {
   UpdateQuestionSchema,
   GetByCreatedBySchema,
 } from "./question.model";
-import { authenticate, authorize } from "@/common/middleware/authenticate";
+import { authenticate, authorize, TEACHER_OR_ABOVE } from "@/common/middleware/authenticate";
 
 export const questionRegistry = new OpenAPIRegistry();
 export const questionRouter: Router = express.Router();
@@ -29,7 +29,7 @@ questionRegistry.registerPath({
   responses: createApiResponse(z.array(QuestionSchema), "Success"),
 });
 
-questionRouter.get("/", questionController.getQuestions);
+questionRouter.get("/", authenticate, questionController.getQuestions);
 
 // get questions by created_by
 questionRegistry.registerPath({
@@ -43,6 +43,7 @@ questionRegistry.registerPath({
 
 questionRouter.get(
   "/created-by/:userId",
+  authenticate,
   validateRequest(GetByCreatedBySchema),
   questionController.getByCreatedBy,
 );
@@ -59,6 +60,7 @@ questionRegistry.registerPath({
 
 questionRouter.get(
   "/:id",
+  authenticate,
   validateRequest(GetQuestionSchema),
   questionController.getQuestion,
 );
@@ -85,7 +87,7 @@ questionRouter.post(
   "/",
   validateRequest(CreateQuestionSchema),
   authenticate,
-  authorize(["admin"]),
+  authorize(TEACHER_OR_ABOVE),
   questionController.createQuestion,
 );
 
@@ -110,6 +112,8 @@ questionRegistry.registerPath({
 
 questionRouter.put(
   "/:id",
+  authenticate,
+  authorize(TEACHER_OR_ABOVE),
   validateRequest(UpdateQuestionSchema),
   questionController.updateQuestion,
 );
@@ -126,6 +130,8 @@ questionRegistry.registerPath({
 
 questionRouter.delete(
   "/:id",
+  authenticate,
+  authorize(TEACHER_OR_ABOVE),
   validateRequest(DeleteQuestionSchema),
   questionController.deleteQuestion,
 );
