@@ -13,6 +13,11 @@ import {
   UpdateExamQuestionSchema,
   GetQuestionsByExamIdSchema,
 } from "./exam_question.model";
+import {
+  authenticate,
+  authorize,
+  TEACHER_OR_ABOVE,
+} from "@/common/middleware/authenticate";
 
 export const examQuestionRegistry = new OpenAPIRegistry();
 export const examQuestionRouter: Router = express.Router();
@@ -66,6 +71,8 @@ examQuestionRegistry.registerPath({
 
 examQuestionRouter.post(
   "/",
+  authenticate,
+  authorize(TEACHER_OR_ABOVE),
   validateRequest(CreateExamQuestionSchema),
   examQuestionController.createExamQuestion,
 );
@@ -91,6 +98,8 @@ examQuestionRegistry.registerPath({
 
 examQuestionRouter.put(
   "/:id",
+  authenticate,
+  authorize(TEACHER_OR_ABOVE),
   validateRequest(UpdateExamQuestionSchema),
   examQuestionController.updateExamQuestion,
 );
@@ -107,6 +116,8 @@ examQuestionRegistry.registerPath({
 
 examQuestionRouter.delete(
   "/:id",
+  authenticate,
+  authorize(TEACHER_OR_ABOVE),
   validateRequest(DeleteExamQuestionSchema),
   examQuestionController.deleteExamQuestion,
 );
