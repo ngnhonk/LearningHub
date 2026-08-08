@@ -14,6 +14,16 @@ class UserController {
     res.status(serviceResponse.statusCode).send(serviceResponse);
   };
 
+  public getProfile: RequestHandler = async (
+    req: AuthenticatedRequest,
+    res: Response,
+  ) => {
+    const userId = req.user?.id as string;
+    const serviceResponse = await userService.getProfile(userId);
+    res.status(serviceResponse.statusCode).send(serviceResponse);
+  };
+
+
   public changePassword: RequestHandler = async (
     req: AuthenticatedRequest,
     res: Response,
