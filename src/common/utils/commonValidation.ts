@@ -95,7 +95,7 @@ export const commonValidations = {
 		.length(6, "OTP must be exactly 6 digits")
 		.regex(/^\d+$/, "OTP must contain only digits"),
 
-	number: z.number({
+	number: z.coerce.number({
 		required_error: "Number cannot be empty",
 		invalid_type_error: "Value must be a number",
 	}),
