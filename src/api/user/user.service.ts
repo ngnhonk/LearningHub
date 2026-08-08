@@ -66,6 +66,37 @@ export class UserService {
     }
   }
 
+  // Retrieves personal profile of the logged-in user
+  async getProfile(userId: string): Promise<ServiceResponse<any | null>> {
+    try {
+      const user = await this.userRepository.getById(userId);
+      if (!user) {
+        return ServiceResponse.failure(
+          "User not found",
+          null,
+          StatusCodes.NOT_FOUND,
+        );
+      }
+      const rawUser = user as any;
+      const { hashed_password, create_at, created_at, ...rest } = rawUser;
+      const profile = {
+        ...rest,
+        created_at: created_at || create_at || null,
+      };
+      return ServiceResponse.success("User profile retrieved successfully", profile);
+    } catch (error) {
+      const errorMessage = `Error retrieving profile for user ${userId}: ${(error as Error).message}`;
+      logger.error(errorMessage);
+      return ServiceResponse.failure(
+        "An error occurred while retrieving user profile.",
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+
+
   async deleteById(id: string): Promise<ServiceResponse<number | null>> {
     try {
       const user = await this.userRepository.deleteById(id);

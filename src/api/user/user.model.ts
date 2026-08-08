@@ -45,3 +45,13 @@ export const ChangeUserRoleSchema = z.object({
 export const ChangeUserRoleResponseSchema = z.object({
 	id: commonValidations.id,
 });
+
+export const UserProfileSchema = z.object({
+	id: commonValidations.id,
+	email: z.string().email(),
+	full_name: z.string().nullable(),
+	username: z.string(),
+	role: z.enum(["student", "admin"]),
+	avatar_url: z.string().nullable(),
+	created_at: commonValidations.date.nullable().optional(),
+});

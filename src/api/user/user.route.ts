@@ -7,6 +7,7 @@ import {
   ChangeUserRoleResponseSchema,
   ChangeUserRoleSchema,
   GetUserSchema,
+  UserProfileSchema,
   UserSchema,
 } from "@/api/user/user.model";
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
@@ -19,6 +20,7 @@ export const userRegistry = new OpenAPIRegistry();
 export const userRouter: Router = express.Router();
 
 userRegistry.register("User", UserSchema);
+userRegistry.register("UserProfile", UserProfileSchema);
 
 userRegistry.registerPath({
   method: "get",
@@ -33,6 +35,22 @@ userRouter.get(
   authorize(["admin"]),
   userController.getUsers,
 );
+
+// Get current user profile
+userRegistry.registerPath({
+  method: "get",
+  path: "/users/me",
+  summary: "Get profile information of current logged-in user",
+  tags: ["User"],
+  responses: createApiResponse(UserProfileSchema, "Success"),
+});
+
+userRouter.get(
+  "/me",
+  authenticate,
+  userController.getProfile,
+);
+
 
 userRegistry.registerPath({
   method: "get",
