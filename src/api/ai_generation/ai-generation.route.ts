@@ -67,9 +67,9 @@ aiGenerationRegistry.registerPath({
 
 aiGenerationRouter.post(
 	"/generate-exam",
-	validateRequest(GenerateExamRequestSchema),
 	authenticate,
 	authorize(["admin"]),
+	validateRequest(GenerateExamRequestSchema),
 	aiGenerationController.generateExam,
 );
 

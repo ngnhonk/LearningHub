@@ -27,7 +27,7 @@ export const GetExamSchema = z.object({
 export const CreateExamSchema = z.object({
 	body: z.object({
 		title: commonValidations.text,
-		description: commonValidations.text,
+		description: z.string().optional().default(""),
 		subject_id: commonValidations.id,
 		duration_minutes: commonValidations.number,
 		total_marks: commonValidations.number,
@@ -40,7 +40,7 @@ export const UpdateExamSchema = z.object({
 	params: z.object({ id: commonValidations.id }),
 	body: z.object({
 		title: commonValidations.text.optional(),
-		description: commonValidations.text.optional(),
+		description: z.string().optional(),
 		subject_id: commonValidations.id.optional(),
 		duration_minutes: commonValidations.number.optional(),
 		total_marks: commonValidations.number.optional(),
