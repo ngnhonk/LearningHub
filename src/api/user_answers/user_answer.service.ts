@@ -79,17 +79,31 @@ export class UserAnswerService {
 		}
 	}
 
+	// Helper to sanitize UserAnswer response when attempt is in_progress
+	private sanitizeAnswer(userAnswer: UserAnswer, hideCorrectness: boolean): any {
+		if (hideCorrectness) {
+			const { is_correct, ...rest } = userAnswer;
+			return rest;
+		}
+		return userAnswer;
+	}
+
 	// Submit an answer - auto-checks if the selected answer is correct
 	async createUserAnswer(
+		userId: string,
 		attempId: string,
 		questionId: string,
 		selectedAnswerId: string,
-	): Promise<ServiceResponse<UserAnswer | null>> {
+		userRole?: string,
+	): Promise<ServiceResponse<any | null>> {
 		try {
 			// Check if attempt exists and is in_progress
 			const attempt = await this.attemptRepository.getById(attempId);
 			if (!attempt) {
 				return ServiceResponse.failure("Exam attempt not found", null, StatusCodes.NOT_FOUND);
+			}
+			if (attempt.user_id !== userId && userRole !== "admin") {
+				return ServiceResponse.failure("Forbidden - You do not own this exam attempt", null, StatusCodes.FORBIDDEN);
 			}
 			if (attempt.status !== "in_progress") {
 				return ServiceResponse.failure(
@@ -99,27 +113,20 @@ export class UserAnswerService {
 				);
 			}
 
-			// Check if user already answered this question in this attempt
-			const existingAnswer = await this.userAnswerRepository.getByAttemptAndQuestion(attempId, questionId);
-			if (existingAnswer) {
-				return ServiceResponse.failure(
-					"User has already answered this question in this attempt. Use update instead.",
-					null,
-					StatusCodes.CONFLICT,
-				);
-			}
-
-			// Check if selected answer exists
+			// Check if selected answer exists and belongs to the question
 			const selectedAnswer = await this.answerRepository.getById(selectedAnswerId);
 			if (!selectedAnswer) {
 				return ServiceResponse.failure("Selected answer not found", null, StatusCodes.NOT_FOUND);
 			}
+			if (selectedAnswer.question_id !== questionId) {
+				return ServiceResponse.failure("Selected answer does not belong to the specified question", null, StatusCodes.BAD_REQUEST);
+			}
 
 			// Auto-check if the selected answer is correct
-			const isCorrect = selectedAnswer.is_correct;
+			const isCorrect = Boolean(selectedAnswer.is_correct);
 
 			const id = uuidv7();
-			const userAnswer: UserAnswer = {
+			const userAnswerData: UserAnswer = {
 				id,
 				attemp_id: attempId,
 				question_id: questionId,
@@ -128,8 +135,10 @@ export class UserAnswerService {
 				answered_at: new Date(),
 			};
 
-			await this.userAnswerRepository.createUserAnswer(userAnswer);
-			return ServiceResponse.success<UserAnswer>("Answer submitted successfully", userAnswer);
+			const saved = await this.userAnswerRepository.upsertUserAnswer(userAnswerData);
+			const responseData = this.sanitizeAnswer(saved, attempt.status === "in_progress");
+
+			return ServiceResponse.success<any>("Answer submitted successfully", responseData);
 		} catch (error) {
 			const errorMessage = `Error creating user answer: ${(error as Error).message}`;
 			logger.error(errorMessage);
@@ -142,7 +151,12 @@ export class UserAnswerService {
 	}
 
 	// Update a user's answer - re-checks correctness with new selected answer
-	async updateUserAnswer(id: string, selectedAnswerId: string): Promise<ServiceResponse<UserAnswer | null>> {
+	async updateUserAnswer(
+		userId: string,
+		id: string,
+		selectedAnswerId: string,
+		userRole?: string,
+	): Promise<ServiceResponse<any | null>> {
 		try {
 			const existingAnswer = await this.userAnswerRepository.getById(id);
 			if (!existingAnswer) {
@@ -158,15 +172,21 @@ export class UserAnswerService {
 					StatusCodes.BAD_REQUEST,
 				);
 			}
+			if (attempt.user_id !== userId && userRole !== "admin") {
+				return ServiceResponse.failure("Forbidden - You do not own this exam attempt", null, StatusCodes.FORBIDDEN);
+			}
 
-			// Check if the new selected answer exists
+			// Check if the new selected answer exists and belongs to the question
 			const selectedAnswer = await this.answerRepository.getById(selectedAnswerId);
 			if (!selectedAnswer) {
 				return ServiceResponse.failure("Selected answer not found", null, StatusCodes.NOT_FOUND);
 			}
+			if (selectedAnswer.question_id !== existingAnswer.question_id) {
+				return ServiceResponse.failure("Selected answer does not belong to the question", null, StatusCodes.BAD_REQUEST);
+			}
 
 			// Re-check correctness
-			const isCorrect = selectedAnswer.is_correct;
+			const isCorrect = Boolean(selectedAnswer.is_correct);
 
 			await this.userAnswerRepository.updateUserAnswer(id, {
 				selected_answer_id: selectedAnswerId,
@@ -175,12 +195,69 @@ export class UserAnswerService {
 			});
 
 			const updatedAnswer = await this.userAnswerRepository.getById(id);
-			return ServiceResponse.success<UserAnswer>("Answer updated successfully", updatedAnswer as UserAnswer);
+			const responseData = this.sanitizeAnswer(updatedAnswer as UserAnswer, attempt.status === "in_progress");
+
+			return ServiceResponse.success<any>("Answer updated successfully", responseData);
 		} catch (error) {
 			const errorMessage = `Error updating user answer with id ${id}: ${(error as Error).message}`;
 			logger.error(errorMessage);
 			return ServiceResponse.failure(
 				"An error occurred while updating the answer.",
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	// Save multiple user answers in batch for an attempt
+	async saveBatchUserAnswers(
+		userId: string,
+		attempId: string,
+		answers: Array<{ question_id: string; selected_answer_id: string }>,
+		userRole?: string,
+	): Promise<ServiceResponse<any | null>> {
+		try {
+			const attempt = await this.attemptRepository.getById(attempId);
+			if (!attempt) {
+				return ServiceResponse.failure("Exam attempt not found", null, StatusCodes.NOT_FOUND);
+			}
+			if (attempt.user_id !== userId && userRole !== "admin") {
+				return ServiceResponse.failure("Forbidden - You do not own this exam attempt", null, StatusCodes.FORBIDDEN);
+			}
+			if (attempt.status !== "in_progress") {
+				return ServiceResponse.failure(
+					"Cannot submit answers for an attempt that is not in progress",
+					null,
+					StatusCodes.BAD_REQUEST,
+				);
+			}
+
+			const savedAnswers = [];
+			for (const item of answers) {
+				const selectedAnswer = await this.answerRepository.getById(item.selected_answer_id);
+				if (!selectedAnswer || selectedAnswer.question_id !== item.question_id) {
+					continue;
+				}
+
+				const isCorrect = Boolean(selectedAnswer.is_correct);
+				const data: UserAnswer = {
+					id: uuidv7(),
+					attemp_id: attempId,
+					question_id: item.question_id,
+					selected_answer_id: item.selected_answer_id,
+					is_correct: isCorrect,
+					answered_at: new Date(),
+				};
+				const saved = await this.userAnswerRepository.upsertUserAnswer(data);
+				savedAnswers.push(this.sanitizeAnswer(saved, true));
+			}
+
+			return ServiceResponse.success<any>("Batch answers saved successfully", savedAnswers);
+		} catch (error) {
+			const errorMessage = `Error saving batch user answers for attempt ${attempId}: ${(error as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure(
+				"An error occurred while saving batch answers.",
 				null,
 				StatusCodes.INTERNAL_SERVER_ERROR,
 			);
@@ -208,3 +285,4 @@ export class UserAnswerService {
 }
 
 export const userAnswerService = new UserAnswerService();
+

@@ -38,6 +38,11 @@ export const GetByExamIdSchema = z.object({
 	params: z.object({ examId: commonValidations.id }),
 });
 
+// Input Validation for 'GET user-exam-attempts/active/:examId'
+export const GetActiveAttemptSchema = z.object({
+	params: z.object({ examId: commonValidations.id }),
+});
+
 // Input Validation for 'POST user-exam-attempts/start'
 export const StartAttemptSchema = z.object({
 	body: z.object({
@@ -45,15 +50,39 @@ export const StartAttemptSchema = z.object({
 	}),
 });
 
+// Input Validation for 'POST user-exam-attempts/:id/answers' (Batch Save)
+export const BatchSaveAnswersSchema = z.object({
+	params: z.object({ id: commonValidations.id }),
+	body: z.object({
+		answers: z.array(
+			z.object({
+				question_id: commonValidations.id,
+				selected_answer_id: commonValidations.id,
+			}),
+		),
+	}),
+});
+
 // Input Validation for 'PUT user-exam-attempts/:id/submit'
 export const SubmitAttemptSchema = z.object({
 	params: z.object({ id: commonValidations.id }),
-	body: z.object({
-		score: commonValidations.number,
-		time_spent_seconds: commonValidations.number,
-	}),
+	body: z
+		.object({
+			score: commonValidations.number.optional(),
+			time_spent_seconds: commonValidations.number.optional(),
+			answers: z
+				.array(
+					z.object({
+						question_id: commonValidations.id,
+						selected_answer_id: commonValidations.id,
+					}),
+				)
+				.optional(),
+		})
+		.optional(),
 });
 
 export const DeleteUserExamAttemptSchema = z.object({
 	params: z.object({ id: commonValidations.id }),
 });
+

@@ -29,6 +29,21 @@ export class UserAnswerRepository {
 		return await db("user_answers").where({ id }).update(payload);
 	}
 
+	async upsertUserAnswer(data: UserAnswer): Promise<UserAnswer> {
+		const existing = await this.getByAttemptAndQuestion(data.attemp_id, data.question_id);
+		if (existing) {
+			await db("user_answers").where({ id: existing.id }).update({
+				selected_answer_id: data.selected_answer_id,
+				is_correct: data.is_correct,
+				answered_at: data.answered_at,
+			});
+			return { ...existing, selected_answer_id: data.selected_answer_id, is_correct: data.is_correct, answered_at: data.answered_at };
+		} else {
+			await db("user_answers").insert(data);
+			return data;
+		}
+	}
+
 	async deleteById(id: string): Promise<number | null> {
 		return await db("user_answers").where({ id }).del();
 	}
@@ -37,3 +52,4 @@ export class UserAnswerRepository {
 		return await db("user_answers").where({ attemp_id: attempId }).del();
 	}
 }
+
