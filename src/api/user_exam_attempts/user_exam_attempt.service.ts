@@ -8,6 +8,8 @@ import { ExamRepository } from "@/api/exams/exam.repository";
 import { UserAnswerRepository } from "@/api/user_answers/user_answer.repository";
 import { QuestionRepository } from "@/api/questions/question.repository";
 import { AnswerRepository } from "@/api/answers/answer.repository";
+import { ExamQuestionRepository } from "@/api/exam_questions/exam_question.repository";
+import { userAnswerService } from "@/api/user_answers/user_answer.service";
 
 export class UserExamAttemptService {
 	private attemptRepository: UserExamAttemptRepository;
@@ -15,6 +17,7 @@ export class UserExamAttemptService {
 	private userAnswerRepository: UserAnswerRepository;
 	private questionRepository: QuestionRepository;
 	private answerRepository: AnswerRepository;
+	private examQuestionRepository: ExamQuestionRepository;
 
 	constructor(
 		attemptRepository: UserExamAttemptRepository = new UserExamAttemptRepository(),
@@ -22,12 +25,14 @@ export class UserExamAttemptService {
 		userAnswerRepository: UserAnswerRepository = new UserAnswerRepository(),
 		questionRepository: QuestionRepository = new QuestionRepository(),
 		answerRepository: AnswerRepository = new AnswerRepository(),
+		examQuestionRepository: ExamQuestionRepository = new ExamQuestionRepository(),
 	) {
 		this.attemptRepository = attemptRepository;
 		this.examRepository = examRepository;
 		this.userAnswerRepository = userAnswerRepository;
 		this.questionRepository = questionRepository;
 		this.answerRepository = answerRepository;
+		this.examQuestionRepository = examQuestionRepository;
 	}
 
 	// Retrieves all user exam attempts
@@ -49,12 +54,15 @@ export class UserExamAttemptService {
 		}
 	}
 
-	// Retrieves a single attempt by its ID
-	async getById(id: string): Promise<ServiceResponse<UserExamAttempt | null>> {
+	// Retrieves a single attempt by its ID with ownership validation
+	async getById(id: string, userId?: string, userRole?: string): Promise<ServiceResponse<UserExamAttempt | null>> {
 		try {
 			const result = await this.attemptRepository.getById(id);
 			if (!result) {
 				return ServiceResponse.failure("User Exam Attempt not found", null, StatusCodes.NOT_FOUND);
+			}
+			if (userId && result.user_id !== userId && userRole !== "admin") {
+				return ServiceResponse.failure("Forbidden - You do not own this exam attempt", null, StatusCodes.FORBIDDEN);
 			}
 			return ServiceResponse.success<UserExamAttempt>("User Exam Attempt found", result);
 		} catch (error) {
@@ -68,19 +76,67 @@ export class UserExamAttemptService {
 		}
 	}
 
-	// Retrieves all attempts by a specific user
-	async getByUserId(userId: string): Promise<ServiceResponse<UserExamAttempt[] | null>> {
+	// Retrieves all attempts by a specific user with ownership check
+	async getByUserId(targetUserId: string, requestingUserId?: string, userRole?: string): Promise<ServiceResponse<UserExamAttempt[] | null>> {
 		try {
-			const result = await this.attemptRepository.getByUserId(userId);
+			const finalUserId = targetUserId === "me" ? requestingUserId : targetUserId;
+			if (!finalUserId) {
+				return ServiceResponse.failure("Invalid user id", null, StatusCodes.BAD_REQUEST);
+			}
+			if (requestingUserId && finalUserId !== requestingUserId && userRole !== "admin") {
+				return ServiceResponse.failure("Forbidden - Cannot view attempts of another user", null, StatusCodes.FORBIDDEN);
+			}
+
+			const result = await this.attemptRepository.getByUserId(finalUserId);
 			if (!result || result.length === 0) {
 				return ServiceResponse.failure("No attempts found for this user", null, StatusCodes.NOT_FOUND);
 			}
 			return ServiceResponse.success<UserExamAttempt[]>("User Exam Attempts found", result);
 		} catch (error) {
-			const errorMessage = `Error finding attempts for user ${userId}: ${(error as Error).message}`;
+			const errorMessage = `Error finding attempts for user ${targetUserId}: ${(error as Error).message}`;
 			logger.error(errorMessage);
 			return ServiceResponse.failure(
 				"An error occurred while retrieving user exam attempts.",
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	// Retrieves active in-progress attempt for an exam along with questions and saved user answers
+	async getActiveAttempt(userId: string, examId: string): Promise<ServiceResponse<any | null>> {
+		try {
+			const attempt = await this.attemptRepository.getInProgressByUserAndExam(userId, examId);
+			if (!attempt) {
+				return ServiceResponse.failure("No active in-progress attempt for this exam", null, StatusCodes.NOT_FOUND);
+			}
+
+			const examQuestions = await this.examQuestionRepository.getQuestionsByExamId(examId);
+			const questions = await Promise.all(
+				examQuestions.map(async (eq) => {
+					const question = await this.questionRepository.getById(eq.question_id);
+					const answers = await this.answerRepository.getByQuestionId(eq.question_id);
+					const sanitizedAnswers = answers.map(({ is_correct, ...rest }) => rest);
+					return {
+						...question,
+						answers: sanitizedAnswers,
+					};
+				}),
+			);
+
+			const rawSavedAnswers = await this.userAnswerRepository.getByAttemptId(attempt.id);
+			const savedAnswers = rawSavedAnswers.map(({ is_correct, ...rest }) => rest);
+
+			return ServiceResponse.success("Active attempt found", {
+				attempt,
+				questions,
+				saved_answers: savedAnswers,
+			});
+		} catch (error) {
+			const errorMessage = `Error retrieving active attempt for user ${userId} and exam ${examId}: ${(error as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure(
+				"An error occurred while retrieving active attempt.",
 				null,
 				StatusCodes.INTERNAL_SERVER_ERROR,
 			);
@@ -106,7 +162,7 @@ export class UserExamAttemptService {
 		}
 	}
 
-	// Start a new exam attempt
+	// Start a new exam attempt or return existing active attempt
 	async startAttempt(userId: string, examId: string): Promise<ServiceResponse<UserExamAttempt | null>> {
 		try {
 			// Check if exam exists and is published
@@ -121,10 +177,9 @@ export class UserExamAttemptService {
 			// Check if user already has an in_progress attempt for this exam
 			const existingAttempt = await this.attemptRepository.getInProgressByUserAndExam(userId, examId);
 			if (existingAttempt) {
-				return ServiceResponse.failure(
-					"User already has an in-progress attempt for this exam",
-					null,
-					StatusCodes.CONFLICT,
+				return ServiceResponse.success<UserExamAttempt>(
+					"Retrieved existing in-progress attempt",
+					existingAttempt,
 				);
 			}
 
@@ -152,12 +207,22 @@ export class UserExamAttemptService {
 		}
 	}
 
-	// Submit an exam attempt
-	async submitAttempt(id: string, score: number, timeSpentSeconds: number): Promise<ServiceResponse<UserExamAttempt | null>> {
+	// Submit an exam attempt with server-side auto grading and timeout enforcement
+	async submitAttempt(
+		id: string,
+		userId: string,
+		scoreParam?: number,
+		timeSpentSecondsParam?: number,
+		answersBatch?: Array<{ question_id: string; selected_answer_id: string }>,
+		userRole?: string,
+	): Promise<ServiceResponse<UserExamAttempt | null>> {
 		try {
 			const attempt = await this.attemptRepository.getById(id);
 			if (!attempt) {
 				return ServiceResponse.failure("User Exam Attempt not found", null, StatusCodes.NOT_FOUND);
+			}
+			if (attempt.user_id !== userId && userRole !== "admin") {
+				return ServiceResponse.failure("Forbidden - You do not own this exam attempt", null, StatusCodes.FORBIDDEN);
 			}
 			if (attempt.status !== "in_progress") {
 				return ServiceResponse.failure(
@@ -167,15 +232,59 @@ export class UserExamAttemptService {
 				);
 			}
 
+			// If answers batch is provided, save them first
+			if (answersBatch && answersBatch.length > 0) {
+				await userAnswerService.saveBatchUserAnswers(userId, id, answersBatch, userRole);
+			}
+
+			const exam = await this.examRepository.getById(attempt.exam_id);
+			const now = new Date();
+			const elapsedSeconds = Math.floor((now.getTime() - new Date(attempt.started_at).getTime()) / 1000);
+			const finalTimeSpent = timeSpentSecondsParam ?? elapsedSeconds;
+
+			// Check timeout (+ 60s buffer for network latency)
+			const durationSeconds = (exam?.duration_minutes || 60) * 60;
+			const finalStatus = finalTimeSpent > durationSeconds + 60 ? "time_out" : "submitted";
+
+			// Server-side Auto Grading
+			const examQuestions = await this.examQuestionRepository.getQuestionsByExamId(attempt.exam_id);
+			const userAnswers = await this.userAnswerRepository.getByAttemptId(id);
+
+			let correctCount = 0;
+			for (const eq of examQuestions) {
+				const allQuestionAnswers = await this.answerRepository.getByQuestionId(eq.question_id);
+				const correctAnswer = allQuestionAnswers.find((a) => a.is_correct);
+				const ua = userAnswers.find((u) => u.question_id === eq.question_id);
+
+				if (ua && correctAnswer && ua.selected_answer_id === correctAnswer.id) {
+					correctCount++;
+					// Ensure is_correct flag in user_answers is accurate
+					if (!ua.is_correct) {
+						await this.userAnswerRepository.updateUserAnswer(ua.id, { is_correct: true });
+					}
+				} else if (ua && ua.is_correct) {
+					await this.userAnswerRepository.updateUserAnswer(ua.id, { is_correct: false });
+				}
+			}
+
+			const totalQuestions = examQuestions.length;
+			const totalMarks = exam?.total_marks || 100;
+			const calculatedScore = totalQuestions > 0
+				? Math.round((correctCount / totalQuestions) * totalMarks * 100) / 100
+				: 0;
+
 			await this.attemptRepository.updateAttempt(id, {
-				status: "submitted",
-				score,
-				submitted_at: new Date(),
-				time_spent_seconds: timeSpentSeconds,
+				status: finalStatus,
+				score: calculatedScore,
+				submitted_at: now,
+				time_spent_seconds: finalTimeSpent,
 			});
 
 			const updatedAttempt = await this.attemptRepository.getById(id);
-			return ServiceResponse.success<UserExamAttempt>("Exam attempt submitted successfully", updatedAttempt as UserExamAttempt);
+			return ServiceResponse.success<UserExamAttempt>(
+				finalStatus === "time_out" ? "Exam attempt timed out and auto-submitted" : "Exam attempt submitted successfully",
+				updatedAttempt as UserExamAttempt,
+			);
 		} catch (error) {
 			const errorMessage = `Error submitting exam attempt with id ${id}: ${(error as Error).message}`;
 			logger.error(errorMessage);
@@ -206,12 +315,15 @@ export class UserExamAttemptService {
 		}
 	}
 
-	// Get detailed result of an attempt
-	async getAttemptResult(id: string): Promise<ServiceResponse<any | null>> {
+	// Get detailed result of an attempt with ownership check
+	async getAttemptResult(id: string, userId?: string, userRole?: string): Promise<ServiceResponse<any | null>> {
 		try {
 			const attempt = await this.attemptRepository.getById(id);
 			if (!attempt) {
 				return ServiceResponse.failure("User Exam Attempt not found", null, StatusCodes.NOT_FOUND);
+			}
+			if (userId && attempt.user_id !== userId && userRole !== "admin") {
+				return ServiceResponse.failure("Forbidden - You do not own this exam attempt", null, StatusCodes.FORBIDDEN);
 			}
 			if (attempt.status === "in_progress") {
 				return ServiceResponse.failure(
@@ -238,7 +350,7 @@ export class UserExamAttemptService {
 						question,
 						selected_answer: selectedAnswer,
 						correct_answer: correctAnswer || null,
-						is_correct: ua.is_correct,
+						is_correct: Boolean(ua.is_correct),
 					};
 				}),
 			);
@@ -266,3 +378,4 @@ export class UserExamAttemptService {
 }
 
 export const userExamAttemptService = new UserExamAttemptService();
+

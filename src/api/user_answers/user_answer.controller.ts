@@ -1,5 +1,7 @@
 import type { Request, RequestHandler, Response } from "express";
 import { userAnswerService } from "./user_answer.service";
+import { AuthenticatedRequest } from "@/common/middleware/authenticate";
+
 
 class UserAnswerController {
 	public getUserAnswers: RequestHandler = async (_req: Request, res: Response) => {
@@ -19,18 +21,23 @@ class UserAnswerController {
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 
-	public createUserAnswer: RequestHandler = async (req: Request, res: Response) => {
+	public createUserAnswer: RequestHandler = async (req: AuthenticatedRequest, res: Response) => {
+		const userId = req.user?.id as string;
+		const userRole = req.user?.role;
 		const { attemp_id, question_id, selected_answer_id } = req.body;
-		const serviceResponse = await userAnswerService.createUserAnswer(attemp_id, question_id, selected_answer_id);
+		const serviceResponse = await userAnswerService.createUserAnswer(userId, attemp_id, question_id, selected_answer_id, userRole);
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 
-	public updateUserAnswer: RequestHandler = async (req: Request, res: Response) => {
+	public updateUserAnswer: RequestHandler = async (req: AuthenticatedRequest, res: Response) => {
+		const userId = req.user?.id as string;
+		const userRole = req.user?.role;
 		const id = req.params.id as string;
 		const { selected_answer_id } = req.body;
-		const serviceResponse = await userAnswerService.updateUserAnswer(id, selected_answer_id);
+		const serviceResponse = await userAnswerService.updateUserAnswer(userId, id, selected_answer_id, userRole);
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
+
 
 	public deleteUserAnswer: RequestHandler = async (req: Request, res: Response) => {
 		const id = req.params.id as string;

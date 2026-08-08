@@ -9,7 +9,9 @@ import {
   GetUserExamAttemptSchema,
   GetByUserIdSchema,
   GetByExamIdSchema,
+  GetActiveAttemptSchema,
   StartAttemptSchema,
+  BatchSaveAnswersSchema,
   SubmitAttemptSchema,
   DeleteUserExamAttemptSchema,
   UserExamAttemptSchema,
@@ -37,11 +39,28 @@ userExamAttemptRouter.get(
   userExamAttemptController.getAttempts,
 );
 
+// get active attempt for an exam
+userExamAttemptRegistry.registerPath({
+  method: "get",
+  path: "/user-exam-attempts/active/{examId}",
+  summary: "Get active in-progress attempt for an exam",
+  tags: ["UserExamAttempt"],
+  request: { params: GetActiveAttemptSchema.shape.params },
+  responses: createApiResponse(z.object({}), "Success"),
+});
+
+userExamAttemptRouter.get(
+  "/active/:examId",
+  authenticate,
+  validateRequest(GetActiveAttemptSchema),
+  userExamAttemptController.getActiveAttempt,
+);
+
 // get by user id
 userExamAttemptRegistry.registerPath({
   method: "get",
   path: "/user-exam-attempts/user/{userId}",
-  summary: "Get all attempts by a specific user",
+  summary: "Get all attempts by a specific user (use 'me' for current user)",
   tags: ["UserExamAttempt"],
   request: { params: GetByUserIdSchema.shape.params },
   responses: createApiResponse(z.array(UserExamAttemptSchema), "Success"),
@@ -75,7 +94,7 @@ userExamAttemptRouter.get(
 userExamAttemptRegistry.registerPath({
   method: "post",
   path: "/user-exam-attempts/start",
-  summary: "Start a new exam attempt",
+  summary: "Start a new exam attempt or retrieve active attempt",
   tags: ["UserExamAttempt"],
   request: {
     body: {
@@ -91,9 +110,35 @@ userExamAttemptRegistry.registerPath({
 
 userExamAttemptRouter.post(
   "/start",
-  validateRequest(StartAttemptSchema),
   authenticate,
+  validateRequest(StartAttemptSchema),
   userExamAttemptController.startAttempt,
+);
+
+// batch save answers
+userExamAttemptRegistry.registerPath({
+  method: "post",
+  path: "/user-exam-attempts/{id}/answers",
+  summary: "Batch save user answers during an attempt",
+  tags: ["UserExamAttempt"],
+  request: {
+    params: BatchSaveAnswersSchema.shape.params,
+    body: {
+      content: {
+        "application/json": {
+          schema: BatchSaveAnswersSchema.shape.body,
+        },
+      },
+    },
+  },
+  responses: createApiResponse(z.array(z.object({})), "Success"),
+});
+
+userExamAttemptRouter.post(
+  "/:id/answers",
+  authenticate,
+  validateRequest(BatchSaveAnswersSchema),
+  userExamAttemptController.batchSaveAnswers,
 );
 
 // submit attempt
@@ -117,8 +162,8 @@ userExamAttemptRegistry.registerPath({
 
 userExamAttemptRouter.put(
   "/:id/submit",
-  validateRequest(SubmitAttemptSchema),
   authenticate,
+  validateRequest(SubmitAttemptSchema),
   userExamAttemptController.submitAttempt,
 );
 
@@ -173,3 +218,4 @@ userExamAttemptRouter.delete(
   validateRequest(DeleteUserExamAttemptSchema),
   userExamAttemptController.deleteAttempt,
 );
+
