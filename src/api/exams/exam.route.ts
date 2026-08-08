@@ -14,7 +14,11 @@ import {
   GetBySubjectIdSchema,
   GetExamDetailSchema,
 } from "./exam.model";
-import { authenticate, authorize } from "@/common/middleware/authenticate";
+import {
+  authenticate,
+  authorize,
+  TEACHER_OR_ABOVE,
+} from "@/common/middleware/authenticate";
 import { uploadExcel } from "@/common/middleware/upload";
 
 export const examRegistry = new OpenAPIRegistry();
@@ -59,11 +63,7 @@ examRegistry.registerPath({
   responses: createApiResponse(ExamSchema, "Success"),
 });
 
-examRouter.get(
-  "/:id",
-  validateRequest(GetExamSchema),
-  examController.getExam,
-);
+examRouter.get("/:id", validateRequest(GetExamSchema), examController.getExam);
 
 // create one
 examRegistry.registerPath({
@@ -87,7 +87,7 @@ examRouter.post(
   "/",
   validateRequest(CreateExamSchema),
   authenticate,
-  authorize(["admin"]),
+  authorize(TEACHER_OR_ABOVE),
   examController.createExam,
 );
 
@@ -112,6 +112,8 @@ examRegistry.registerPath({
 
 examRouter.put(
   "/:id",
+  authenticate,
+  authorize(TEACHER_OR_ABOVE),
   validateRequest(UpdateExamSchema),
   examController.updateExam,
 );
@@ -128,6 +130,8 @@ examRegistry.registerPath({
 
 examRouter.delete(
   "/:id",
+  authenticate,
+  authorize(TEACHER_OR_ABOVE),
   validateRequest(DeleteExamSchema),
   examController.deleteExam,
 );
@@ -144,6 +148,7 @@ examRegistry.registerPath({
 
 examRouter.get(
   "/:id/detail",
+  authenticate,
   validateRequest(GetExamDetailSchema),
   examController.getExamDetail,
 );
@@ -181,7 +186,7 @@ examRegistry.registerPath({
 examRouter.post(
   "/import",
   authenticate,
-  authorize(["admin"]),
+  authorize(TEACHER_OR_ABOVE),
   uploadExcel.single("file"),
   examController.importFromExcel,
 );
