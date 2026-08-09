@@ -114,7 +114,7 @@ export class AuthService {
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: false,
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: Number(JWT_REFRESH_TOKEN_TIME) * 60 * 60 * 1000,
       });
 
@@ -181,7 +181,7 @@ export class AuthService {
         res.clearCookie("refreshToken", {
           httpOnly: true,
           secure: false,
-          sameSite: "strict",
+          sameSite: "lax",
         });
         return ServiceResponse.failure(
           "Token reuse detected. Please login again.",
@@ -213,7 +213,7 @@ export class AuthService {
       res.cookie("refreshToken", newRefreshToken, {
         httpOnly: true,
         secure: false,
-        sameSite: "strict",
+        sameSite: "lax",
         maxAge: Number(JWT_REFRESH_TOKEN_TIME) * 60 * 60 * 1000,
       });
 
@@ -250,7 +250,7 @@ export class AuthService {
       res.clearCookie("refreshToken", {
         httpOnly: true,
         secure: false,
-        sameSite: "strict",
+        sameSite: "lax",
       });
       return ServiceResponse.success("Logged out!", null, StatusCodes.OK);
     } catch (error) {

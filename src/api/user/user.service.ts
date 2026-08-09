@@ -161,7 +161,7 @@ export class UserService {
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: false,
-      sameSite: "strict",
+      sameSite: "lax",
     });
 
     return ServiceResponse.success<null>("Password changed successfully", null);
