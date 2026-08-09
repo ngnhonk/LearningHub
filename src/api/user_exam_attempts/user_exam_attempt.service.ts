@@ -91,7 +91,19 @@ export class UserExamAttemptService {
 			if (!result || result.length === 0) {
 				return ServiceResponse.failure("No attempts found for this user", null, StatusCodes.NOT_FOUND);
 			}
-			return ServiceResponse.success<UserExamAttempt[]>("User Exam Attempts found", result);
+
+			// Attach exam information for history UI
+			const attemptsWithExam = await Promise.all(
+				result.map(async (attempt) => {
+					const exam = await this.examRepository.getById(attempt.exam_id);
+					return {
+						...attempt,
+						exam: exam ? { title: exam.title, total_marks: exam.total_marks } : undefined,
+					};
+				})
+			);
+
+			return ServiceResponse.success<any[]>("User Exam Attempts found", attemptsWithExam);
 		} catch (error) {
 			const errorMessage = `Error finding attempts for user ${targetUserId}: ${(error as Error).message}`;
 			logger.error(errorMessage);

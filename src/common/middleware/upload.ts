@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 const uploadDirectory = path.join(process.cwd(), "src/uploads/avatars");
 
 // Ensure directory exists
-if (!fs.existsSync(uploadDirectory)) { 
+if (!fs.existsSync(uploadDirectory)) {
 	fs.mkdirSync(uploadDirectory, { recursive: true });
 }
 
@@ -34,7 +34,7 @@ export const uploadAvatar = multer({
 	storage,
 	fileFilter,
 	limits: {
-		fileSize: 5 * 1024 * 1024, // 5MB limit
+		fileSize: 10 * 1024 * 1024, // 5MB limit
 	},
 });
 
@@ -45,7 +45,7 @@ const excelFileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFi
 		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
 		"application/vnd.ms-excel" // .xls
 	];
-	
+
 	if (allowedTypes.includes(file.mimetype) || file.originalname.match(/\.(xlsx|xls)$/)) {
 		cb(null, true);
 	} else {

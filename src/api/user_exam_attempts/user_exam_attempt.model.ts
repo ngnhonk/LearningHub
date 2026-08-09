@@ -30,7 +30,9 @@ export const GetUserExamAttemptSchema = z.object({
 
 // Input Validation for 'GET user-exam-attempts/user/:userId'
 export const GetByUserIdSchema = z.object({
-	params: z.object({ userId: commonValidations.id }),
+	params: z.object({ 
+		userId: z.union([commonValidations.id, z.literal("me")])
+	}),
 });
 
 // Input Validation for 'GET user-exam-attempts/exam/:examId'
