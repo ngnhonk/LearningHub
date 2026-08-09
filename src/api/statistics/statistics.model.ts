@@ -25,6 +25,7 @@ export const ExamStatisticsSchema = z.object({
 
 export const AdminOverviewSchema = z.object({
 	total_users: z.number(),
+	total_subjects: z.number(),
 	total_exams: z.number(),
 	total_questions: z.number(),
 	total_attempts: z.number(),
