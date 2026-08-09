@@ -68,7 +68,6 @@ export const SubmitAttemptSchema = z.object({
 	params: z.object({ id: commonValidations.id }),
 	body: z
 		.object({
-			score: commonValidations.number.optional(),
 			time_spent_seconds: commonValidations.number.optional(),
 			answers: z
 				.array(

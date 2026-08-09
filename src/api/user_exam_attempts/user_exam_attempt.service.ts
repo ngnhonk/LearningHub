@@ -111,6 +111,15 @@ export class UserExamAttemptService {
 				return ServiceResponse.failure("No active in-progress attempt for this exam", null, StatusCodes.NOT_FOUND);
 			}
 
+			// BUG #7: Auto-submit if time is up
+			const exam = await this.examRepository.getById(examId);
+			const durationSeconds = (exam?.duration_minutes || 60) * 60;
+			const elapsed = Math.floor((Date.now() - new Date(attempt.started_at).getTime()) / 1000);
+			if (elapsed > durationSeconds + 60) {
+				await this.submitAttempt(attempt.id, userId, undefined, undefined, undefined);
+				return ServiceResponse.failure("Attempt has timed out and was auto-submitted", null, StatusCodes.BAD_REQUEST);
+			}
+
 			const examQuestions = await this.examQuestionRepository.getQuestionsByExamId(examId);
 			const questions = await Promise.all(
 				examQuestions.map(async (eq) => {
@@ -127,8 +136,10 @@ export class UserExamAttemptService {
 			const rawSavedAnswers = await this.userAnswerRepository.getByAttemptId(attempt.id);
 			const savedAnswers = rawSavedAnswers.map(({ is_correct, ...rest }) => rest);
 
+			// BUG #3: Include exam metadata so client can calculate remaining time
 			return ServiceResponse.success("Active attempt found", {
 				attempt,
+				exam,
 				questions,
 				saved_answers: savedAnswers,
 			});
@@ -191,6 +202,7 @@ export class UserExamAttemptService {
 				status: "in_progress",
 				score: 0,
 				started_at: new Date(),
+				submitted_at: null,
 				time_spent_seconds: 0,
 			});
 
@@ -211,7 +223,6 @@ export class UserExamAttemptService {
 	async submitAttempt(
 		id: string,
 		userId: string,
-		scoreParam?: number,
 		timeSpentSecondsParam?: number,
 		answersBatch?: Array<{ question_id: string; selected_answer_id: string }>,
 		userRole?: string,
@@ -239,12 +250,13 @@ export class UserExamAttemptService {
 
 			const exam = await this.examRepository.getById(attempt.exam_id);
 			const now = new Date();
+			// BUG #2: Always compute elapsed from server time for timeout check
 			const elapsedSeconds = Math.floor((now.getTime() - new Date(attempt.started_at).getTime()) / 1000);
-			const finalTimeSpent = timeSpentSecondsParam ?? elapsedSeconds;
+			const finalTimeSpent = Math.min(timeSpentSecondsParam ?? elapsedSeconds, elapsedSeconds);
 
-			// Check timeout (+ 60s buffer for network latency)
+			// Check timeout using server-side elapsed (+ 60s buffer for network latency)
 			const durationSeconds = (exam?.duration_minutes || 60) * 60;
-			const finalStatus = finalTimeSpent > durationSeconds + 60 ? "time_out" : "submitted";
+			const finalStatus = elapsedSeconds > durationSeconds + 60 ? "time_out" : "submitted";
 
 			// Server-side Auto Grading
 			const examQuestions = await this.examQuestionRepository.getQuestionsByExamId(attempt.exam_id);
@@ -333,24 +345,25 @@ export class UserExamAttemptService {
 				);
 			}
 
-			// Get all user answers for this attempt
+			// BUG #5: Iterate over examQuestions (not just userAnswers) to include unanswered questions
 			const userAnswers = await this.userAnswerRepository.getByAttemptId(id);
+			const examQuestions = await this.examQuestionRepository.getQuestionsByExamId(attempt.exam_id);
+			const exam = await this.examRepository.getById(attempt.exam_id);
 
-			// Build detailed results
+			// Build detailed results from all exam questions
 			const details = await Promise.all(
-				userAnswers.map(async (ua) => {
-					const question = await this.questionRepository.getById(ua.question_id);
-					const selectedAnswer = await this.answerRepository.getById(ua.selected_answer_id);
-
-					// Find the correct answer for this question
-					const allAnswers = await this.answerRepository.getByQuestionId(ua.question_id);
+				examQuestions.map(async (eq) => {
+					const question = await this.questionRepository.getById(eq.question_id);
+					const allAnswers = await this.answerRepository.getByQuestionId(eq.question_id);
 					const correctAnswer = allAnswers.find((a) => a.is_correct);
+					const ua = userAnswers.find((u) => u.question_id === eq.question_id);
+					const selectedAnswer = ua ? await this.answerRepository.getById(ua.selected_answer_id) : null;
 
 					return {
 						question,
-						selected_answer: selectedAnswer,
+						selected_answer: selectedAnswer || null,
 						correct_answer: correctAnswer || null,
-						is_correct: Boolean(ua.is_correct),
+						is_correct: ua ? Boolean(ua.is_correct) : false,
 					};
 				}),
 			);
@@ -360,9 +373,11 @@ export class UserExamAttemptService {
 
 			return ServiceResponse.success("Attempt result found", {
 				attempt,
-				total_questions: details.length,
+				total_questions: examQuestions.length,
 				correct_count: correctCount,
 				wrong_count: wrongCount,
+				total_marks: exam?.total_marks ?? 10,
+				pass_percentage: exam?.pass_percentage ?? 50,
 				details,
 			});
 		} catch (error) {
