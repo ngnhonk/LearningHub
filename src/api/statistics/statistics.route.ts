@@ -10,6 +10,7 @@ import {
   ExamStatisticsSchema,
   AdminOverviewSchema,
   GetLearningAnalyticsSchema,
+  SystemStatisticsSchema,
 } from "./statistics.model";
 import { authenticate, authorize } from "@/common/middleware/authenticate";
 
@@ -79,4 +80,20 @@ statisticsRouter.get(
   authorize(["admin", "teacher"]),
   validateRequest(GetLearningAnalyticsSchema),
   statisticsController.getLearningAnalytics,
+);
+
+// system statistics (strict admin only)
+statisticsRegistry.registerPath({
+  method: "get",
+  path: "/statistics/system/overview",
+  summary: "Get comprehensive technical system statistics (admin only)",
+  tags: ["Statistics"],
+  responses: createApiResponse(SystemStatisticsSchema, "Success"),
+});
+
+statisticsRouter.get(
+  "/system/overview",
+  authenticate,
+  authorize(["admin"]),
+  statisticsController.getSystemStatistics,
 );

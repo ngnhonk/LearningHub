@@ -26,6 +26,11 @@ class StatisticsController {
 		const serviceResponse = await statisticsService.getLearningAnalytics(subjectId, timeframe);
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
+
+	public getSystemStatistics: RequestHandler = async (_req: Request, res: Response) => {
+		const serviceResponse = await statisticsService.getSystemStatistics();
+		res.status(serviceResponse.statusCode).send(serviceResponse);
+	};
 }
 
 export const statisticsController = new StatisticsController();
