@@ -19,6 +19,13 @@ class StatisticsController {
 		const serviceResponse = await statisticsService.getAdminOverview();
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
+
+	public getLearningAnalytics: RequestHandler = async (req: Request, res: Response) => {
+		const subjectId = req.query.subjectId as string | undefined;
+		const timeframe = req.query.timeframe as "7days" | "30days" | "all" | undefined;
+		const serviceResponse = await statisticsService.getLearningAnalytics(subjectId, timeframe);
+		res.status(serviceResponse.statusCode).send(serviceResponse);
+	};
 }
 
 export const statisticsController = new StatisticsController();

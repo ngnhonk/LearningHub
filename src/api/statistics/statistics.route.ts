@@ -9,6 +9,7 @@ import {
   StudentStatisticsSchema,
   ExamStatisticsSchema,
   AdminOverviewSchema,
+  GetLearningAnalyticsSchema,
 } from "./statistics.model";
 import { authenticate, authorize } from "@/common/middleware/authenticate";
 
@@ -61,4 +62,21 @@ statisticsRouter.get(
   authenticate,
   authorize(["admin", "teacher"]),
   statisticsController.getAdminOverview,
+);
+
+// learning analytics (teacher & admin)
+statisticsRegistry.registerPath({
+  method: "get",
+  path: "/statistics/learning-analytics",
+  summary: "Get comprehensive learning analytics for teachers and admins",
+  tags: ["Statistics"],
+  responses: createApiResponse(AdminOverviewSchema, "Success"),
+});
+
+statisticsRouter.get(
+  "/learning-analytics",
+  authenticate,
+  authorize(["admin", "teacher"]),
+  validateRequest(GetLearningAnalyticsSchema),
+  statisticsController.getLearningAnalytics,
 );

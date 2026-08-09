@@ -30,3 +30,10 @@ export const AdminOverviewSchema = z.object({
 	total_questions: z.number(),
 	total_attempts: z.number(),
 });
+
+export const GetLearningAnalyticsSchema = z.object({
+	query: z.object({
+		subjectId: z.string().optional(),
+		timeframe: z.enum(["7days", "30days", "all"]).optional(),
+	}).optional(),
+});
