@@ -12,7 +12,7 @@ export const UserSchema = z.object({
 	full_name: z.string(),
 	username: z.string().min(2).max(100),
 	hashed_password: z.string(),
-	role: z.enum(["student", "admin"]),
+	role: commonValidations.role,
 	avatar_url: z.string(),
 	create_at: z.date(),
 });
@@ -51,7 +51,7 @@ export const UserProfileSchema = z.object({
 	email: z.string().email(),
 	full_name: z.string().nullable(),
 	username: z.string(),
-	role: z.enum(["student", "admin"]),
+	role: commonValidations.role,
 	avatar_url: z.string().nullable(),
 	created_at: commonValidations.date.nullable().optional(),
 });

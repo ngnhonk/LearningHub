@@ -56,6 +56,12 @@ class UserController {
     const serviceResponse = await userService.changeUserRole(id, newRole);
     res.status(serviceResponse.statusCode).send(serviceResponse);
   };
+
+  public deleteUser: RequestHandler = async (req: Request, res: Response) => {
+    const id = req.params.id as string;
+    const serviceResponse = await userService.deleteById(id);
+    res.status(serviceResponse.statusCode).send(serviceResponse);
+  };
 }
 
 export const userController = new UserController();
