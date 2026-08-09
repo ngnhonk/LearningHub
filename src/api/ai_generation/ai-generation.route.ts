@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { createApiResponse } from "@/api-docs/openAPIResponseBuilders";
 import { validateRequest } from "@/common/utils/httpHandlers";
-import { authenticate, authorize } from "@/common/middleware/authenticate";
+import { authenticate, authorize, TEACHER_OR_ABOVE } from "@/common/middleware/authenticate";
 import { aiGenerationController } from "./ai-generation.controller";
 import {
 	GenerateExamRequestSchema,
@@ -22,11 +22,16 @@ const markdownFilter = (
 	file: Express.Multer.File,
 	cb: multer.FileFilterCallback,
 ) => {
-	if (
+	const extMatch = Boolean(file.originalname && file.originalname.match(/\.(md|markdown|txt)$/i));
+	const mimeMatch =
+		!file.mimetype ||
 		file.mimetype === "text/markdown" ||
 		file.mimetype === "text/plain" ||
-		file.originalname.match(/\.(md|markdown|txt)$/)
-	) {
+		file.mimetype === "text/x-markdown" ||
+		file.mimetype === "application/octet-stream" ||
+		file.mimetype === "application/x-markdown";
+
+	if (extMatch || mimeMatch) {
 		cb(null, true);
 	} else {
 		cb(
@@ -68,7 +73,7 @@ aiGenerationRegistry.registerPath({
 aiGenerationRouter.post(
 	"/generate-exam",
 	authenticate,
-	authorize(["admin"]),
+	authorize(TEACHER_OR_ABOVE),
 	validateRequest(GenerateExamRequestSchema),
 	aiGenerationController.generateExam,
 );
@@ -108,7 +113,7 @@ aiGenerationRegistry.registerPath({
 aiGenerationRouter.post(
 	"/upload-document",
 	authenticate,
-	authorize(["admin"]),
+	authorize(TEACHER_OR_ABOVE),
 	uploadMarkdown.single("file"),
 	aiGenerationController.uploadDocument,
 );
@@ -134,7 +139,7 @@ aiGenerationRegistry.registerPath({
 aiGenerationRouter.post(
 	"/sync-questions",
 	authenticate,
-	authorize(["admin"]),
+	authorize(TEACHER_OR_ABOVE),
 	aiGenerationController.syncQuestions,
 );
 

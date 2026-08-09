@@ -20,15 +20,30 @@ interface ImportExamInput {
 
 export class ExamRepository {
 	async getAll(): Promise<Exam[]> {
-		return await db("exams").select("*");
+		return await db("exams")
+			.select("exams.*")
+			.count("exam_questions.question_id as question_count")
+			.leftJoin("exam_questions", "exams.id", "exam_questions.exam_id")
+			.groupBy("exams.id");
 	}
 
 	async getById(id: string): Promise<Exam | null> {
-		return await db("exams").where({ id }).first();
+		return await db("exams")
+			.where({ "exams.id": id })
+			.select("exams.*")
+			.count("exam_questions.question_id as question_count")
+			.leftJoin("exam_questions", "exams.id", "exam_questions.exam_id")
+			.groupBy("exams.id")
+			.first();
 	}
 
 	async getBySubjectId(subjectId: string): Promise<Exam[]> {
-		return await db("exams").where({ subject_id: subjectId }).select("*");
+		return await db("exams")
+			.where({ subject_id: subjectId })
+			.select("exams.*")
+			.count("exam_questions.question_id as question_count")
+			.leftJoin("exam_questions", "exams.id", "exam_questions.exam_id")
+			.groupBy("exams.id");
 	}
 
 	async deleteById(id: string): Promise<number | null> {

@@ -134,3 +134,19 @@ userRouter.put(
   validateRequest(ChangeUserRoleSchema),
   userController.changeUserRole,
 );
+
+userRegistry.registerPath({
+  method: "delete",
+  path: "/users/{id}",
+  tags: ["User"],
+  request: { params: GetUserSchema.shape.params },
+  responses: createApiResponse(z.object({ count: z.number() }), "Success"),
+});
+
+userRouter.delete(
+  "/:id",
+  authenticate,
+  authorize(["admin"]),
+  validateRequest(GetUserSchema),
+  userController.deleteUser,
+);
