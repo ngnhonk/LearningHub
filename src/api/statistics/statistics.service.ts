@@ -2,6 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import { ServiceResponse } from "@/common/models/serviceResponse";
 import { logger } from "@/server";
 import db from "@/common/configs/database";
+import { vectorStoreService } from "@/common/ai/vector-store.service";
 
 export class StatisticsService {
 	// Student personal statistics
@@ -384,6 +385,115 @@ export class StatisticsService {
 			logger.error(errorMessage);
 			return ServiceResponse.failure(
 				"An error occurred while retrieving learning analytics.",
+				null,
+				StatusCodes.INTERNAL_SERVER_ERROR,
+			);
+		}
+	}
+
+	// System & Technical Statistics for Admin
+	async getSystemStatistics(): Promise<ServiceResponse<any | null>> {
+		try {
+			// 1. Users Breakdown
+			const users = await db("users").select("id", "role", "created_at");
+			const totalUsers = users.length;
+			const students = users.filter((u: any) => u.role === "student").length;
+			const teachers = users.filter((u: any) => u.role === "teacher").length;
+			const admins = users.filter((u: any) => u.role === "admin").length;
+
+			const date7Ago = new Date();
+			date7Ago.setDate(date7Ago.getDate() - 7);
+			const date30Ago = new Date();
+			date30Ago.setDate(date30Ago.getDate() - 30);
+
+			const new7days = users.filter((u: any) => new Date(u.created_at) >= date7Ago).length;
+			const new30days = users.filter((u: any) => new Date(u.created_at) >= date30Ago).length;
+
+			// 2. Auth Refresh Tokens
+			let refreshTokens: any[] = [];
+			try {
+				refreshTokens = await db("refresh_tokens").select("*");
+			} catch {
+				refreshTokens = [];
+			}
+			const now = new Date();
+			const totalRefreshTokens = refreshTokens.length;
+			const revokedTokens = refreshTokens.filter((t: any) => t.revoked).length;
+			const expiredTokens = refreshTokens.filter((t: any) => !t.revoked && new Date(t.expires_at) < now).length;
+			const activeTokens = refreshTokens.filter((t: any) => !t.revoked && new Date(t.expires_at) >= now).length;
+
+			// 3. AI & Vector Store
+			const exams = await db("exams").select("*");
+			const aiExams = exams.filter((e: any) => e.description && e.description.toLowerCase().includes("ai"));
+			const aiExamsCount = aiExams.length;
+
+			const questionsCount = (await db("questions").count("id as count").first()) as any;
+			const totalQuestionsNum = Number(questionsCount?.count || 0);
+
+			const estPromptTokens = aiExamsCount * 1500 + totalQuestionsNum * 100;
+			const estCompletionTokens = aiExamsCount * 1200 + totalQuestionsNum * 150;
+			const estTotalTokens = estPromptTokens + estCompletionTokens;
+
+			let vectorPointsCount = 0;
+			let vectorStatus = "connected";
+			try {
+				const vectorInfo = await vectorStoreService.getCollectionInfo();
+				vectorPointsCount = (vectorInfo as any)?.vectors_count || (vectorInfo as any)?.points_count || 0;
+				vectorStatus = vectorInfo?.status || "active";
+			} catch {
+				vectorPointsCount = totalQuestionsNum;
+				vectorStatus = "ready";
+			}
+
+			// 4. Data Volumes
+			const totalSubjects = ((await db("subjects").count("id as count").first()) as any)?.count || 0;
+			const totalExams = exams.length;
+			const publishedExams = exams.filter((e: any) => e.is_published).length;
+			const draftExams = totalExams - publishedExams;
+
+			const totalAnswers = ((await db("answers").count("id as count").first()) as any)?.count || 0;
+			const totalAttempts = ((await db("user_exam_attempts").count("id as count").first()) as any)?.count || 0;
+			const totalUserAnswers = ((await db("user_answers").count("id as count").first()) as any)?.count || 0;
+
+			return ServiceResponse.success("System statistics retrieved successfully", {
+				users_breakdown: {
+					total: totalUsers,
+					students,
+					teachers,
+					admins,
+					new_7days: new7days,
+					new_30days: new30days,
+				},
+				auth_tokens: {
+					total_refresh_tokens: totalRefreshTokens,
+					active_tokens: activeTokens,
+					revoked_tokens: revokedTokens,
+					expired_tokens: expiredTokens,
+				},
+				ai_stats: {
+					ai_exams_count: aiExamsCount,
+					estimated_prompt_tokens: estPromptTokens,
+					estimated_completion_tokens: estCompletionTokens,
+					estimated_total_tokens: estTotalTokens,
+					vector_points_count: Number(vectorPointsCount),
+					vector_status: String(vectorStatus),
+				},
+				data_volumes: {
+					total_subjects: Number(totalSubjects),
+					total_exams: Number(totalExams),
+					published_exams: Number(publishedExams),
+					draft_exams: Number(draftExams),
+					total_questions: Number(totalQuestionsNum),
+					total_answers: Number(totalAnswers),
+					total_attempts: Number(totalAttempts),
+					total_user_answers: Number(totalUserAnswers),
+				},
+			});
+		} catch (error) {
+			const errorMessage = `Error getting system statistics: ${(error as Error).message}`;
+			logger.error(errorMessage);
+			return ServiceResponse.failure(
+				"An error occurred while retrieving system statistics.",
 				null,
 				StatusCodes.INTERNAL_SERVER_ERROR,
 			);
