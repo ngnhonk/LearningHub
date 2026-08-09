@@ -2,6 +2,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { type Express } from "express";
 import helmet from "helmet";
+import path from "path";
 import { pino } from "pino";
 import { healthCheckRouter } from "@/api/healthCheck/healthCheckRouter";
 import { subjectRouter } from "@/api/subject/subject.route";
@@ -34,8 +35,11 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(rateLimiter);
+
+// Static files
+app.use("/uploads", express.static(path.join(process.cwd(), "src/uploads")));
 
 // Request logging
 app.use(requestLogger);
