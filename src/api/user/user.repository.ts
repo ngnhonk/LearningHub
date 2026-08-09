@@ -37,7 +37,8 @@ export class UserRepository {
   }
 
   async addAvatar(id: string, avatar_url: string): Promise<User> {
-    return await db("users").where({ id }).update({ avatar_url });
+    await db("users").where({ id }).update({ avatar_url });
+    return (await this.getById(id)) as User;
   }
 
   async createUser(
