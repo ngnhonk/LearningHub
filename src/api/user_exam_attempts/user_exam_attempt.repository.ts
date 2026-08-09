@@ -24,7 +24,7 @@ export class UserExamAttemptRepository {
 			.first();
 	}
 
-	async createAttempt(data: Omit<UserExamAttempt, "submitted_at">): Promise<number> {
+	async createAttempt(data: UserExamAttempt): Promise<number> {
 		const [result] = await db("user_exam_attempts").insert(data);
 		return result;
 	}

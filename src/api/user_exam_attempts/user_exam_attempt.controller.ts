@@ -1,5 +1,6 @@
 import type { Request, RequestHandler, Response } from "express";
 import { userExamAttemptService } from "./user_exam_attempt.service";
+import { userAnswerService } from "@/api/user_answers/user_answer.service";
 import { AuthenticatedRequest } from "@/common/middleware/authenticate";
 
 class UserExamAttemptController {
@@ -49,8 +50,7 @@ class UserExamAttemptController {
 		const userId = req.user?.id as string;
 		const userRole = req.user?.role;
 		const { answers } = req.body;
-		const serviceResponse = await (userExamAttemptService as any).userAnswerService?.saveBatchUserAnswers(userId, id, answers, userRole)
-			|| await require("@/api/user_answers/user_answer.service").userAnswerService.saveBatchUserAnswers(userId, id, answers, userRole);
+		const serviceResponse = await userAnswerService.saveBatchUserAnswers(userId, id, answers, userRole);
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 
@@ -58,10 +58,9 @@ class UserExamAttemptController {
 		const id = req.params.id as string;
 		const userId = req.user?.id as string;
 		const userRole = req.user?.role;
-		const score = req.body?.score;
 		const time_spent_seconds = req.body?.time_spent_seconds;
 		const answers = req.body?.answers;
-		const serviceResponse = await userExamAttemptService.submitAttempt(id, userId, score, time_spent_seconds, answers, userRole);
+		const serviceResponse = await userExamAttemptService.submitAttempt(id, userId, time_spent_seconds, answers, userRole);
 		res.status(serviceResponse.statusCode).send(serviceResponse);
 	};
 

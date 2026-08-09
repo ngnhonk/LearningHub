@@ -86,6 +86,7 @@ userExamAttemptRegistry.registerPath({
 userExamAttemptRouter.get(
   "/exam/:examId",
   authenticate,
+  authorize(["admin"]),
   validateRequest(GetByExamIdSchema),
   userExamAttemptController.getByExamId,
 );
