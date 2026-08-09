@@ -59,6 +59,6 @@ statisticsRegistry.registerPath({
 statisticsRouter.get(
   "/admin/overview",
   authenticate,
-  authorize(["admin"]),
+  authorize(["admin", "teacher"]),
   statisticsController.getAdminOverview,
 );

@@ -95,16 +95,22 @@ export class StatisticsService {
 	// Admin overview statistics
 	async getAdminOverview(): Promise<ServiceResponse<any | null>> {
 		try {
-			const [usersCount] = await db("users").count("id as count");
+			const [studentsCount] = await db("users").where({ role: "student" }).count("id as count");
+			const [totalUsersCount] = await db("users").count("id as count");
+			const [subjectsCount] = await db("subjects").count("id as count");
 			const [examsCount] = await db("exams").count("id as count");
 			const [questionsCount] = await db("questions").count("id as count");
 			const [attemptsCount] = await db("user_exam_attempts").count("id as count");
 
+			const studentCountNum = Number(studentsCount?.count ?? 0);
+			const totalUserNum = Number(totalUsersCount?.count ?? 0);
+
 			return ServiceResponse.success("Admin overview found", {
-				total_users: Number(usersCount.count),
-				total_exams: Number(examsCount.count),
-				total_questions: Number(questionsCount.count),
-				total_attempts: Number(attemptsCount.count),
+				total_users: studentCountNum > 0 ? studentCountNum : totalUserNum,
+				total_subjects: Number(subjectsCount?.count ?? 0),
+				total_exams: Number(examsCount?.count ?? 0),
+				total_questions: Number(questionsCount?.count ?? 0),
+				total_attempts: Number(attemptsCount?.count ?? 0),
 			});
 		} catch (error) {
 			const errorMessage = `Error getting admin overview: ${(error as Error).message}`;
